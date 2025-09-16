@@ -1,3 +1,7 @@
+// NOTE: Backend auth is temporarily disabled for local development.
+// TODO: Re-enable backend integration when backend is ready. Replace the
+// mocked implementations below with real API calls to `API_BASE_URL`.
+
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
 export interface User {
@@ -75,6 +79,9 @@ class ApiService {
     this.tokenExpiry = this.getStoredTokenExpiry();
   }
 
+  // NOTE: The request method is intentionally not used while mocking auth.
+  // When backend is re-enabled, restore the request() implementation and
+  // use it for all API calls.
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
@@ -90,26 +97,18 @@ class ApiService {
       ...options,
     };
 
-    try {
-      const response = await fetch(url, config);
+    // Preserve the original behavior for non-auth calls in the future.
+    const response = await fetch(url, config);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new ApiError(
-          errorData.message || `HTTP error! status: ${response.status}`,
-          response.status
-        );
-      }
-
-      return await response.json();
-    } catch (error) {
-      if (error instanceof ApiError) {
-        throw error;
-      }
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
       throw new ApiError(
-        error instanceof Error ? error.message : "An unknown error occurred"
+        errorData.message || `HTTP error! status: ${response.status}`,
+        response.status
       );
     }
+
+    return await response.json();
   }
 
   // Token expiry methods
@@ -131,30 +130,57 @@ class ApiService {
 
   // Auth methods
   async login(credentials: LoginRequest): Promise<AuthResponse> {
-    const response = await this.request<AuthResponse>("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify(credentials),
-    });
+    // Mocked login for local development. Accept any non-empty email/password.
+    // TODO: Replace with real backend call when backend is available.
+    if (!credentials.email || !credentials.password) {
+      throw new ApiError("Invalid credentials", 400);
+    }
 
-    this.token = response.token;
-    localStorage.setItem("token", response.token);
+    const mockUser: User = {
+      id: "local-user",
+      username: credentials.email.split("@")[0],
+      email: credentials.email,
+      role: "user",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    } as User;
+
+    const mockToken = "local-dev-token";
+    this.token = mockToken;
+    localStorage.setItem("token", mockToken);
     this.setTokenExpiry();
-    return response;
+
+    return { token: mockToken, user: mockUser };
   }
 
   async register(userData: RegisterRequest): Promise<AuthResponse> {
-    const response = await this.request<AuthResponse>("/api/auth/register", {
-      method: "POST",
-      body: JSON.stringify(userData),
-    });
+    // Mocked register for local development. Create a local user and token.
+    // TODO: Replace with real backend call when backend is available.
+    if (!userData.email || !userData.password || !userData.username) {
+      throw new ApiError("Missing registration fields", 400);
+    }
 
-    this.token = response.token;
-    localStorage.setItem("token", response.token);
+    const mockUser: User = {
+      id: "local-user",
+      username: userData.username,
+      email: userData.email,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      role: "user",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    } as User;
+
+    const mockToken = "local-dev-token";
+    this.token = mockToken;
+    localStorage.setItem("token", mockToken);
     this.setTokenExpiry();
-    return response;
+
+    return { token: mockToken, user: mockUser };
   }
 
   async logout(): Promise<void> {
+    // Clear local mock token
     this.token = null;
     this.tokenExpiry = null;
     localStorage.removeItem("token");
@@ -162,7 +188,24 @@ class ApiService {
   }
 
   async getCurrentUser(): Promise<User> {
-    return this.request<User>("/api/auth/me");
+    // Return a mocked user when running without backend.
+    // If token is missing or expired, throw an error to simulate unauthenticated.
+    if (!this.token || this.isTokenExpired()) {
+      throw new ApiError("Not authenticated", 401);
+    }
+
+    // Build a simple user from token (for local dev).
+    const email = "local@dev";
+    const mockUser: User = {
+      id: "local-user",
+      username: "local",
+      email,
+      role: "user",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    } as User;
+
+    return mockUser;
   }
 
   async updateProfile(profileData: {

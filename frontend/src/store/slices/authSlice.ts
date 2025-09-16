@@ -74,6 +74,8 @@ export const getCurrentUser = createAsyncThunk(
   "auth/getCurrentUser",
   async (_, { rejectWithValue }) => {
     try {
+      // apiService may be mocked locally; this call will either return a
+      // User or throw an ApiError if unauthenticated.
       const user = await apiService.getCurrentUser();
       return user;
     } catch (error) {

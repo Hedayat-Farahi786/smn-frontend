@@ -24,6 +24,9 @@ import {
 } from "lucide-react";
 
 const RegisterPage: React.FC = () => {
+  // TODO: Backend auth is temporarily disabled for local development.
+  // Registration will create a mocked local user and token. Re-enable real
+  // registration when backend endpoints exist.
   // Basic Information
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");

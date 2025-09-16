@@ -17,6 +17,10 @@ import { Alert, AlertDescription } from "../components/ui/alert";
 import { Loader2, Eye, EyeOff, FileSignature } from "lucide-react";
 
 const LoginPage: React.FC = () => {
+  // TODO: Backend auth is temporarily disabled for local development.
+  // This project currently uses a mocked frontend auth flow that stores a
+  // local token. Remove this note and restore server-side auth calls when
+  // the backend is ready.
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);

@@ -3,7 +3,12 @@ import { Document, Page, pdfjs } from "react-pdf";
 
 // Set up PDF.js worker with fallback
 try {
-  pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+  // Use local worker first, then fallback to CDN
+  const version = pdfjs.version || "5.4.149";
+  // Add cache-busting parameter to ensure fresh worker file
+  pdfjs.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.js?v=${Date.now()}`;
+  console.log("PDF.js configured with worker:", pdfjs.GlobalWorkerOptions.workerSrc);
+  console.log("PDF.js version:", version);
 } catch (error) {
   console.warn("PDF.js worker setup failed, using empty string:", error);
   pdfjs.GlobalWorkerOptions.workerSrc = "";

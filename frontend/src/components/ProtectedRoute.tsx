@@ -13,11 +13,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     (state) => state.auth
   );
 
-  useEffect(() => {
-    if (token && !isAuthenticated) {
-      dispatch(getCurrentUser());
-    }
-  }, [dispatch, token, isAuthenticated]);
+  // NOTE: We don't auto-fetch current user here for the mocked local auth
+  // flow. When backend is available, consider re-adding a refresh path (e.g.
+  // dispatch(getCurrentUser()) when a token exists).
 
   if (loading) {
     return (

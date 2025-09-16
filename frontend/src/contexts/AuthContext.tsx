@@ -45,15 +45,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const initAuth = async () => {
+      // Initialize auth using the apiService which is currently mocked for
+      // local development. When backend is re-enabled, apiService will
+      // perform real requests.
       if (apiService.isAuthenticated()) {
         try {
           const userData = await apiService.getCurrentUser();
           setUser(userData);
         } catch (error) {
-          console.error("Failed to get current user:", error);
+          console.warn("Failed to get current user (mock/back):", error);
           apiService.logout();
         }
       }
+
       setLoading(false);
     };
 

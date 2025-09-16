@@ -37,6 +37,40 @@ const Layout: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { t } = useTranslation();
   const [timeRemaining, setTimeRemaining] = useState<string>("");
+  // Hardcoded username as requested
+  const hardcodedUsername = "Hedayat Farahi";
+  // Determine account type (default to Free)
+  const accountType = user?.role ? user.role : "Free";
+  // custom dropdown state for user menu
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = React.useRef<HTMLDivElement | null>(null);
+
+  // image fallback state
+  const [imgBroken, setImgBroken] = React.useState(false);
+  React.useEffect(() => {
+    // reset broken flag when profile picture URL changes
+    setImgBroken(false);
+  }, [user?.profilePicture]);
+
+  const getInitials = (name: string) => {
+    if (!name) return "";
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  };
+
+  React.useEffect(() => {
+    const onClickOutside = (e: MouseEvent) => {
+      if (!userMenuRef.current) return;
+      const target = e.target as Node;
+      if (!userMenuRef.current.contains(target)) {
+        setUserMenuOpen(false);
+      }
+    };
+
+    if (userMenuOpen) document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, [userMenuOpen]);
 
   const navigation = [
     { name: t("nav.dashboard"), href: "/app/dashboard", icon: LayoutDashboard },
@@ -63,8 +97,8 @@ const Layout: React.FC = () => {
     { name: t("nav.settings"), href: "/app/settings", icon: Settings },
   ];
 
+  // Removed duplicate 'My Profile' from this list; there's a dedicated profile button in the user container
   const profileNavigation = [
-    { name: t("nav.myProfile"), href: "/app/profile", icon: User },
     { name: t("nav.messages"), href: "/app/messages", icon: Mail },
     { name: t("nav.usage"), href: "/app/usage", icon: BarChart3 },
     { name: t("nav.invoices"), href: "/app/invoices", icon: CreditCard },
@@ -169,22 +203,24 @@ const Layout: React.FC = () => {
                   }`}
                   onClick={() => navigate(item.href)}
                 >
-                  <div className="relative">
-                    <item.icon
-                      className={`h-4 w-4 transition-all duration-300 ${
-                        isCollapsed ? "" : "mr-3"
-                      }`}
-                    />
-                    {item.badge && !isCollapsed && (
-                      <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                        {item.badge}
-                      </span>
-                    )}
-                  </div>
+                  <item.icon
+                    className={`h-4 w-4 transition-all duration-300 ${
+                      isCollapsed ? "" : ""
+                    }`}
+                  />
+
                   {!isCollapsed && (
-                    <span className="transition-opacity duration-500">
-                      {item.name}
-                    </span>
+                    <>
+                      <span className="ml-3 truncate transition-opacity duration-500">
+                        {item.name}
+                      </span>
+
+                      {item.badge && (
+                        <span className="ml-auto bg-primary text-primary-foreground text-[10px] rounded-full px-2 py-0.5 min-w-[20px] h-5 flex items-center justify-center font-medium">
+                          {Number(item.badge) > 99 ? "99+" : item.badge}
+                        </span>
+                      )}
+                    </>
                   )}
                 </Button>
               );
@@ -259,133 +295,69 @@ const Layout: React.FC = () => {
             </nav>
           </div>
 
-          {/* User Profile Section */}
-          <div className="p-4 border-t">
-            {isCollapsed ? (
-              <div className="space-y-2">
-                {/* User Avatar with Tooltip */}
-                <div className="relative">
-                  <Tooltip placement="right">
-                    <TooltipTrigger asChild>
-                      <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center overflow-hidden cursor-pointer hover:bg-muted/80 transition-colors">
-                        {user?.profilePicture ? (
-                          <img
-                            src={user.profilePicture}
-                            alt="Profile"
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <User className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <div className="text-center">
-                        <p className="font-medium text-sm">
-                          {user?.firstName && user?.lastName
-                            ? `${user.firstName} ${user.lastName}`
-                            : user?.username}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {user?.email}
-                        </p>
-                        {user?.role && (
-                          <p className="text-xs text-muted-foreground font-medium capitalize mt-1">
-                            {user.role}
-                          </p>
-                        )}
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
+          {/* User Profile Section with custom dropdown */}
+          <div className="p-4 border-t" ref={userMenuRef as any}>
+            <div className="relative">
+              {/* Trigger + Upgrade in a single container so hover bg covers both */}
+              <div className="group">
+                <div className="flex items-center gap-3 px-2 py-1 pr-3 rounded-md group-hover:bg-muted" role="button">
+                  <div
+                    className="flex items-center gap-3 cursor-pointer"
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  >
+                    <div className="w-9 h-9 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                      {user?.profilePicture && !imgBroken ? (
+                        <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover" onError={() => setImgBroken(true)} />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-transparent text-black font-medium">{getInitials(hardcodedUsername)}</div>
+                      )}
+                    </div>
 
-                {/* Logout Button with Tooltip */}
-                <div className="relative">
-                  <Tooltip placement="right">
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-8 h-8 p-0 rounded-full hover:bg-muted transition-colors"
-                        onClick={handleLogout}
-                      >
-                        <LogOut className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-xs">
-                      <div className="text-center">
-                        <p className="text-sm font-medium">
-                          {t("common.logout")}
-                        </p>
-                        {timeRemaining && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {t("auth.sessionExpiresIn")} {timeRemaining}
-                          </p>
-                        )}
+                    {!isCollapsed && (
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate text-black">{hardcodedUsername}</p>
+                        <p className="text-xs truncate text-black/80">{accountType}</p>
                       </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-muted/50 rounded-lg p-4">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center overflow-hidden">
-                    {user?.profilePicture ? (
-                      <img
-                        src={user.profilePicture}
-                        alt="Profile"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <User className="h-5 w-5 text-muted-foreground" />
                     )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {user?.firstName && user?.lastName
-                        ? `${user.firstName} ${user.lastName}`
-                        : user?.username}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {user?.email}
-                    </p>
-                    {user?.role && (
-                      <p className="text-xs text-muted-foreground font-medium capitalize mt-1">
-                        {user.role}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="relative">
-                  <Tooltip placement="top">
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full h-9 hover:bg-muted transition-colors"
-                        onClick={handleLogout}
-                      >
-                        <LogOut className="mr-2 h-4 w-4" />
-                        {t("common.signOut")}
+
+                  {/* Upgrade button on the right of trigger - visually part of the same container */}
+                  { !isCollapsed && (
+                    <div className="ml-auto flex-shrink-0">
+                      <Button size="sm" variant="outline" className="h-7 px-2 rounded-md text-xs" onClick={() => {/* placeholder for upgrade */}}>
+                        Upgrade
                       </Button>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-xs">
-                      <div className="text-center">
-                        <p className="text-sm font-medium">
-                          {t("common.logout")}
-                        </p>
-                        {timeRemaining && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {t("auth.sessionExpiresIn")} {timeRemaining}
-                          </p>
-                        )}
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
+                    </div>
+                  ) }
                 </div>
               </div>
-            )}
+
+              {/* Dropdown panel - opens upward */}
+              {userMenuOpen && (
+                <div className="absolute left-0 bottom-full mb-2 w-56 rounded-md border bg-popover p-2 shadow-md z-50 text-sm">
+                  <div className="px-3 py-2">
+                    <p className="text-sm font-medium text-popover-foreground truncate">{hardcodedUsername}</p>
+                    <p className="text-xs text-popover-foreground/80 truncate">{user?.email}</p>
+                  </div>
+                  <div className="h-px bg-muted my-1" />
+                  <button className="w-full text-left px-3 py-2 rounded-sm hover:bg-accent hover:text-accent-foreground text-sm" onClick={() => { navigate('/app/profile'); setUserMenuOpen(false); }}>
+                    <div className="flex items-center gap-2"><User className="h-4 w-4"/><span>Profile</span></div>
+                  </button>
+                  {accountType === 'Free' && (
+                    <button className="w-full text-left px-3 py-2 rounded-sm hover:bg-accent hover:text-accent-foreground text-sm" onClick={() => { /* upgrade */ setUserMenuOpen(false); }}>
+                      <div className="flex items-center gap-2"><CreditCard className="h-4 w-4"/><span>Upgrade plan</span></div>
+                    </button>
+                  )}
+                  <button className="w-full text-left px-3 py-2 rounded-sm hover:bg-accent hover:text-accent-foreground text-sm" onClick={() => { navigate('/app/settings'); setUserMenuOpen(false); }}>
+                    <div className="flex items-center gap-2"><Settings className="h-4 w-4"/><span>Settings</span></div>
+                  </button>
+                  <div className="h-px bg-muted my-1" />
+                  <button className="w-full text-left px-3 py-2 rounded-sm text-red-500 hover:bg-red-50 text-sm" onClick={() => { handleLogout(); setUserMenuOpen(false); }}>
+                    <div className="flex items-center gap-2"><LogOut className="h-4 w-4 text-red-500"/><span>Log out</span></div>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

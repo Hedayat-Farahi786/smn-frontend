@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Edit3, Copy, RotateCw, Trash2, ArrowUp, ArrowDown, 
-  Minus, Plus, Lock, Unlock, Eye, EyeOff,
-  FlipHorizontal, FlipVertical, Scissors, RotateCcw,
-  ChevronDown, Palette, Square as SquareIcon, Circle
+  Copy, RotateCw, Trash2, Minus, Plus, Scissors, RotateCcw, Type, Bold, Italic, Underline
 } from 'lucide-react';
 
 interface AnnotationEditToolbarProps {
@@ -47,6 +44,9 @@ const AnnotationEditToolbar: React.FC<AnnotationEditToolbarProps> = ({
 }) => {
   const [showStrokePicker, setShowStrokePicker] = useState(false);
   const [showFillPicker, setShowFillPicker] = useState(false);
+  const [showTextStrokePicker, setShowTextStrokePicker] = useState(false);
+  const [showTextFillPicker, setShowTextFillPicker] = useState(false);
+  const [showTextBorderPicker, setShowTextBorderPicker] = useState(false);
   
   const colors = [
     '#000000', '#374151', '#6B7280', '#9CA3AF', '#D1D5DB', '#F3F4F6', '#FFFFFF',
@@ -67,7 +67,7 @@ const AnnotationEditToolbar: React.FC<AnnotationEditToolbarProps> = ({
       onClick={onClick}
       className={`flex flex-col items-center gap-1 px-2 py-1.5 rounded-md transition-all duration-200 ${
         active 
-          ? 'bg-blue-100 text-blue-600 shadow-sm' 
+          ? 'bg-primary/10 text-primary shadow-sm' 
           : 'hover:bg-gray-100 text-gray-600 hover:text-gray-800'
       } ${className}`}
       title={label}
@@ -151,13 +151,13 @@ const AnnotationEditToolbar: React.FC<AnnotationEditToolbarProps> = ({
                 <button
                   key={c}
                   className={`w-7 h-7 rounded border-2 transition-all hover:scale-105 ${
-                    color === (allowTransparent && label === 'Fill' ? c + '40' : c)
-                      ? 'border-blue-500 ring-1 ring-blue-200'
+                    color === c
+                      ? 'border-primary ring-1 ring-primary/20'
                       : 'border-gray-200 hover:border-gray-400'
                   }`}
-                  style={{ backgroundColor: allowTransparent && label === 'Fill' ? c + '40' : c }}
+                  style={{ backgroundColor: c }}
                   onClick={() => {
-                    onChange(allowTransparent && label === 'Fill' ? c + '40' : c);
+                    onChange(c);
                     setShowPicker(false);
                   }}
                 />
@@ -168,17 +168,17 @@ const AnnotationEditToolbar: React.FC<AnnotationEditToolbarProps> = ({
               <input
                 type="color"
                 className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
-                value={color === 'transparent' ? '#ffffff' : (color.includes('40') ? color.replace('40', '') : color)}
-                onChange={(e) => onChange(allowTransparent && label === 'Fill' ? e.target.value + '40' : e.target.value)}
+                value={color === 'transparent' ? '#ffffff' : color}
+                onChange={(e) => onChange(e.target.value)}
               />
               <input
                 type="text"
                 placeholder="#000000"
                 className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                value={color === 'transparent' ? '' : (color.includes('40') ? color.replace('40', '') : color)}
+                value={color === 'transparent' ? '' : color}
                 onChange={(e) => {
                   if (/^#[0-9A-F]{6}$/i.test(e.target.value) || e.target.value === '') {
-                    onChange(allowTransparent && label === 'Fill' && e.target.value ? e.target.value + '40' : e.target.value);
+                    onChange(e.target.value);
                   }
                 }}
               />
@@ -190,133 +190,172 @@ const AnnotationEditToolbar: React.FC<AnnotationEditToolbarProps> = ({
   );
 
   return (
-    <div className="bg-white border-t border-gray-200 px-4 py-3 flex items-center justify-between shadow-sm">
-      <div className="flex items-center gap-6">
+    <div className="bg-white border-t border-gray-200 shadow-sm">
+      <div className="px-4 py-3 flex items-center gap-4">
         {/* Edit Actions */}
         <div className="flex items-center gap-2">
-          <ToolButton icon={Edit3} label="Edit" onClick={onEdit} />
           <ToolButton icon={Copy} label="Copy" onClick={onCopy} />
           <ToolButton icon={Scissors} label="Cut" onClick={onCut} />
+          <ToolButton icon={Copy} label="Paste" onClick={onPaste} />
           <ToolButton icon={Copy} label="Duplicate" onClick={onDuplicate} />
+        </div>
+
+        <div className="w-px h-8 bg-gray-200" />
+
+        {/* Transform Actions */}
+        <div className="flex items-center gap-2">
+          <ToolButton icon={RotateCcw} label="Rotate L" onClick={onRotateLeft} />
+          <ToolButton icon={RotateCw} label="Rotate R" onClick={onRotate} />
         </div>
 
         <div className="w-px h-8 bg-gray-200" />
 
         {/* Style Controls */}
         <div className="flex items-center gap-4">
-          {/* Stroke Section */}
-          <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-lg border">
-            <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Stroke</span>
-            <ColorControl
-              label=""
-              color={currentStrokeColor}
-              onChange={(color) => onStyleUpdate({
-                style: {
-                  ...annotation.style,
-                  [annotation.type === 'line' ? 'color' : 'borderColor']: color
-                }
-              })}
-              showPicker={showStrokePicker}
-              setShowPicker={setShowStrokePicker}
-            />
-            {(annotation.type === 'line' || annotation.type === 'shape') && (
+          {/* Text Controls */}
+          {annotation.type === 'text' && (
+            <>
+              {/* Font Size */}
               <NumberControl
-                label=""
-                value={currentBorderWidth}
+                label="Font Size"
+                value={annotation.style?.fontSize || 14}
                 onChange={(value) => onStyleUpdate({
-                  style: { ...annotation.style, borderWidth: value }
+                  style: { ...annotation.style, fontSize: value }
                 })}
-                min={1}
-                max={20}
+                min={8}
+                max={72}
                 unit="px"
               />
-            )}
-          </div>
-
-          {/* Fill Section */}
-          {annotation.type === 'shape' && (
-            <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-lg border">
-              <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Fill</span>
+              
+              {/* Font Weight */}
+              <div className="flex items-center gap-1">
+                <ToolButton 
+                  icon={Bold} 
+                  label="Bold" 
+                  active={annotation.style?.fontWeight === 'bold'}
+                  onClick={() => onStyleUpdate({
+                    style: { 
+                      ...annotation.style, 
+                      fontWeight: annotation.style?.fontWeight === 'bold' ? 'normal' : 'bold' 
+                    }
+                  })}
+                />
+                <ToolButton 
+                  icon={Italic} 
+                  label="Italic" 
+                  active={annotation.style?.fontStyle === 'italic'}
+                  onClick={() => onStyleUpdate({
+                    style: { 
+                      ...annotation.style, 
+                      fontStyle: annotation.style?.fontStyle === 'italic' ? 'normal' : 'italic' 
+                    }
+                  })}
+                />
+              </div>
+              
+              {/* Text Color */}
               <ColorControl
-                label=""
-                color={currentFillColor}
+                label="Text Color"
+                color={annotation.style?.color || '#000000'}
+                onChange={(color) => onStyleUpdate({
+                  style: { ...annotation.style, color }
+                })}
+                showPicker={showTextStrokePicker}
+                setShowPicker={setShowTextStrokePicker}
+              />
+              
+              {/* Background Color */}
+              <ColorControl
+                label="Background"
+                color={annotation.style?.backgroundColor || 'transparent'}
                 onChange={(color) => onStyleUpdate({
                   style: { ...annotation.style, backgroundColor: color }
                 })}
-                showPicker={showFillPicker}
-                setShowPicker={setShowFillPicker}
+                showPicker={showTextFillPicker}
+                setShowPicker={setShowTextFillPicker}
                 allowTransparent={true}
               />
+              
+              {/* Border Color */}
+              <ColorControl
+                label="Border"
+                color={annotation.style?.borderColor || 'transparent'}
+                onChange={(color) => onStyleUpdate({
+                  style: { ...annotation.style, borderColor: color }
+                })}
+                showPicker={showTextBorderPicker}
+                setShowPicker={setShowTextBorderPicker}
+                allowTransparent={true}
+              />
+              
+              {/* Border Width */}
               <NumberControl
-                label=""
-                value={currentBorderRadius}
+                label="Border Width"
+                value={annotation.style?.borderWidth || 0}
                 onChange={(value) => onStyleUpdate({
-                  style: { ...annotation.style, borderRadius: value }
+                  style: { ...annotation.style, borderWidth: value }
                 })}
                 min={0}
-                max={50}
-                step={2}
+                max={10}
                 unit="px"
               />
-            </div>
+            </>
           )}
-
-          {/* Size Section */}
-          {(annotation.type === 'shape' || annotation.type === 'line') && (
-            <div className="flex items-center gap-2">
-              <NumberControl
-                label="W"
-                value={Math.round(annotation.width)}
-                onChange={(value) => onStyleUpdate({ width: value })}
-                min={10}
-                max={500}
-                step={5}
+          
+          {/* Non-text Controls */}
+          {annotation.type !== 'text' && (
+            <>
+              {/* Stroke Color */}
+              <ColorControl
+                label="Stroke"
+                color={currentStrokeColor}
+                onChange={(color) => onStyleUpdate({
+                  style: {
+                    ...annotation.style,
+                    [annotation.type === 'line' ? 'color' : 'borderColor']: color
+                  }
+                })}
+                showPicker={showStrokePicker}
+                setShowPicker={setShowStrokePicker}
+                allowTransparent={true}
               />
-              <NumberControl
-                label="H"
-                value={Math.round(annotation.height)}
-                onChange={(value) => onStyleUpdate({ height: value })}
-                min={10}
-                max={500}
-                step={5}
-              />
-            </div>
+              
+              {/* Stroke Size */}
+              {(annotation.type === 'line' || annotation.type === 'shape' || annotation.type === 'rectangle') && (
+                <NumberControl
+                  label="Stroke Size"
+                  value={currentBorderWidth}
+                  onChange={(value) => onStyleUpdate({
+                    style: { ...annotation.style, borderWidth: value }
+                  })}
+                  min={1}
+                  max={20}
+                  unit="px"
+                />
+              )}
+              
+              {/* Fill Color */}
+              {(annotation.type === 'shape' || annotation.type === 'rectangle') && (
+                <ColorControl
+                  label="Fill"
+                  color={currentFillColor}
+                  onChange={(color) => onStyleUpdate({
+                    style: { ...annotation.style, backgroundColor: color }
+                  })}
+                  showPicker={showFillPicker}
+                  setShowPicker={setShowFillPicker}
+                  allowTransparent={true}
+                />
+              )}
+            </>
           )}
         </div>
 
+        <div className="flex-1" />
+        
         <div className="w-px h-8 bg-gray-200" />
 
-        {/* Transform Actions */}
-        <div className="flex items-center gap-1">
-          <ToolButton icon={RotateCcw} label="Rotate L" onClick={onRotateLeft} />
-          <ToolButton icon={RotateCw} label="Rotate R" onClick={onRotate} />
-          <ToolButton icon={FlipHorizontal} label="Flip H" onClick={onFlipH} />
-          <ToolButton icon={FlipVertical} label="Flip V" onClick={onFlipV} />
-        </div>
-
-        <div className="w-px h-8 bg-gray-200" />
-
-        {/* Layer Actions */}
-        <div className="flex items-center gap-1">
-          <ToolButton icon={ArrowUp} label="To Front" onClick={onBringToFront} />
-          <ToolButton icon={ArrowDown} label="To Back" onClick={onSendToBack} />
-        </div>
-      </div>
-
-      {/* Right Side Actions */}
-      <div className="flex items-center gap-1">
-        <ToolButton 
-          icon={isLocked ? Lock : Unlock} 
-          label={isLocked ? 'Unlock' : 'Lock'} 
-          onClick={onLock} 
-          active={isLocked} 
-        />
-        <ToolButton 
-          icon={isHidden ? EyeOff : Eye} 
-          label={isHidden ? 'Show' : 'Hide'} 
-          onClick={onHide} 
-          active={isHidden} 
-        />
+        {/* Delete Action - Far Right */}
         <ToolButton 
           icon={Trash2} 
           label="Delete" 
@@ -324,6 +363,24 @@ const AnnotationEditToolbar: React.FC<AnnotationEditToolbarProps> = ({
           className="text-red-500 hover:text-red-600 hover:bg-red-50" 
         />
       </div>
+      
+      {/* Text Editor Panel - Below Toolbar */}
+      {annotation.type === 'text' && (
+        <div className="border-t border-gray-100 px-4 py-3 bg-gray-50">
+          <div className="flex items-center gap-2 mb-2">
+            <Type className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-gray-700">Text Content</span>
+          </div>
+          <textarea
+            value={annotation.content || ''}
+            onChange={(e) => onStyleUpdate({ content: e.target.value })}
+            className="w-full text-sm border border-gray-200 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary resize-none bg-white"
+            placeholder="Enter your text here..."
+            rows={3}
+            style={{ minHeight: '60px' }}
+          />
+        </div>
+      )}
     </div>
   );
 };

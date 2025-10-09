@@ -146,15 +146,15 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
       <div className="flex items-center justify-center h-96 bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <div className="text-blue-600 text-lg mb-2">Initializing PDF.js...</div>
-          <div className="text-blue-500 text-sm">Setting up PDF rendering engine</div>
+          <div className="text-blue-600 text-lg mb-2">Preparing your document...</div>
+          <div className="text-blue-500 text-sm">Getting everything ready for editing</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div ref={containerRef} className="relative w-full h-full overflow-auto bg-gray-100">
+    <div ref={containerRef} className="relative w-full h-full overflow-y-auto overflow-x-hidden bg-gray-100">
       <Document
         file={file}
         onLoadSuccess={handleLoadSuccess}
@@ -163,20 +163,17 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
           <div className="flex items-center justify-center h-96">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <div className="text-gray-600">Loading PDF...</div>
+              <div className="text-gray-600">Opening your document...</div>
             </div>
           </div>
         }
         error={
           <div className="flex items-center justify-center h-96 bg-red-50 border border-red-200 rounded-lg">
             <div className="text-center">
-              <div className="text-red-600 text-lg mb-2">Failed to load PDF</div>
-              <div className="text-red-500 text-sm mb-4">Please check if the file is a valid PDF</div>
-              <div className="text-gray-600 text-xs">
-                <div>PDF.js Worker: {pdfjs.GlobalWorkerOptions.workerSrc}</div>
-                <div>Version: {pdfjs.version}</div>
-                <div>Worker Initialized: {workerInitialized ? 'Yes' : 'No'}</div>
-                <div>If you see version mismatch errors, the worker may not be compatible.</div>
+              <div className="text-red-600 text-lg mb-2">Couldn't open this document</div>
+              <div className="text-red-500 text-sm mb-4">Please make sure this is a valid PDF file and try again</div>
+              <div className="text-gray-500 text-xs mt-4">
+                <div>Having trouble? Try uploading a different PDF file.</div>
               </div>
             </div>
           </div>
@@ -192,73 +189,54 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
                 <div
                   key={`page_${pageNumber}`}
                   ref={el => pageRefs.current[pageNumber] = el}
-                  className="relative bg-white w-full"
+                  className="relative bg-white w-full mb-4"
                 >
                   <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
                     <span className="text-sm font-medium text-gray-600">Page {pageNumber} of {numPages}</span>
                   </div>
-                  <div className="w-full">
+                  <div className="relative w-full">
                     <Page
                       pageNumber={pageNumber}
-                      width={containerRef.current?.clientWidth || window.innerWidth}
-                      className="w-full block"
+                      width={containerRef.current?.clientWidth || window.innerWidth - 40}
+                      className="w-full"
                       onClick={(event) => handlePageClick(event, pageNumber)}
                     />
-                  </div>
                   
-                  {/* Annotation Layer for this page */}
-                  <div
-                    className="absolute inset-0 pointer-events-auto"
-                    onClick={(event) => {
-                      if (selectedTool && selectedTool !== 'select') {
-                        const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-                        const currentScale = containerRef.current?.clientWidth ? containerRef.current.clientWidth / 612 : 1.0;
-                        const x = (event.clientX - rect.left) / currentScale;
-                        const y = (event.clientY - rect.top) / currentScale;
-                        
-                        const newAnnotation: Omit<PDFAnnotation, 'id'> = {
-                          type: selectedTool as PDFAnnotation['type'],
-                          x,
-                          y,
-                          width: getDefaultWidth(selectedTool as PDFAnnotation['type']),
-                          height: getDefaultHeight(selectedTool as PDFAnnotation['type']),
-                          content: getDefaultContent(selectedTool as PDFAnnotation['type']),
-                          pageNumber,
-                          style: getDefaultStyle(selectedTool as PDFAnnotation['type']),
-                          zIndex: pageAnnotations.length + 1,
-                        };
-                        
-                        // Call the parent's onPageClick with the annotation data
+                    
+                    {/* Annotation Layer for this page */}
+                    <div
+                      className="absolute inset-0 pointer-events-auto"
+                      onClick={(event) => {
                         if (onPageClick) {
                           onPageClick(event, pageNumber);
                         }
-                      }
-                    }}
-                    style={{ zIndex: 10 }}
-                  >
-                    <AnnotationLayer
-                      annotations={pageAnnotations}
-                      selectedTool={selectedTool}
-                      onAnnotationAdd={(annotation) => {
-                        // This will be handled by the parent component
-                        console.log('Add annotation:', annotation);
                       }}
-                      onAnnotationUpdate={(id, updates) => {
-                        if (onAnnotationUpdate) {
-                          onAnnotationUpdate({ ...updates, id } as any);
-                        }
-                      }}
-                      onAnnotationDelete={(id) => {
-                        if (onAnnotationDelete) {
-                          onAnnotationDelete(id);
-                        }
-                      }}
-                      onAnnotationSelect={onAnnotationSelect}
-                      selectedAnnotationId={selectedAnnotationId}
-                      selectedAnnotationIds={selectedAnnotationIds}
-                      scale={containerRef.current?.clientWidth ? containerRef.current.clientWidth / 612 : 1.0}
-                      pageNumber={pageNumber}
-                    />
+                      style={{ zIndex: 10 }}
+                    >
+                      <AnnotationLayer
+                        annotations={pageAnnotations}
+                        selectedTool={selectedTool}
+                        onAnnotationAdd={(annotation) => {
+                          // This will be handled by the parent component
+                          console.log('Add annotation:', annotation);
+                        }}
+                        onAnnotationUpdate={(id, updates) => {
+                          if (onAnnotationUpdate) {
+                            onAnnotationUpdate({ ...updates, id } as any);
+                          }
+                        }}
+                        onAnnotationDelete={(id) => {
+                          if (onAnnotationDelete) {
+                            onAnnotationDelete(id);
+                          }
+                        }}
+                        onAnnotationSelect={onAnnotationSelect}
+                        selectedAnnotationId={selectedAnnotationId}
+                        selectedAnnotationIds={selectedAnnotationIds}
+                        scale={1}
+                        pageNumber={pageNumber}
+                      />
+                    </div>
                   </div>
                 </div>
               );

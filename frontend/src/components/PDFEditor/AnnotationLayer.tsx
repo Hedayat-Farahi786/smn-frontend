@@ -6,7 +6,8 @@ import {
   CheckSquare, 
   Image, 
   Square, 
-  Minus
+  Minus,
+  Edit3
 } from 'lucide-react';
 
 // Custom drag hook for React 18 compatibility
@@ -100,7 +101,7 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
     };
 
     onAnnotationAdd(newAnnotation);
-  }, [selectedTool, scale, pageNumber, annotations.length, onAnnotationAdd, onAnnotationSelect]);
+  }, [selectedTool, pageNumber, annotations.length, onAnnotationAdd, onAnnotationSelect, selectedAnnotationId]);
 
   const getDefaultWidth = (type: PDFAnnotation['type']): number => {
     switch (type) {
@@ -211,8 +212,8 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   const handleResizeMove = useCallback((e: MouseEvent) => {
     if (!isResizing || !resizeData) return;
 
-    const deltaX = (e.clientX - resizeData.startX) / scale;
-    const deltaY = (e.clientY - resizeData.startY) / scale;
+    const deltaX = e.clientX - resizeData.startX;
+    const deltaY = e.clientY - resizeData.startY;
     
     let newWidth = resizeData.startWidth;
     let newHeight = resizeData.startHeight;
@@ -262,7 +263,7 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
       x: newX,
       y: newY
     });
-  }, [isResizing, resizeData, scale, onAnnotationUpdate]);
+  }, [isResizing, resizeData, onAnnotationUpdate]);
 
   const handleResizeEnd = useCallback(() => {
     setIsResizing(false);
@@ -283,7 +284,7 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   const getDefaultContent = (type: PDFAnnotation['type']): string => {
     switch (type) {
       case 'text':
-        return 'Sample Text';
+        return 'Text';
       case 'signature':
         return 'Signature';
       case 'checkbox':
@@ -301,25 +302,27 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
 
   const getDefaultStyle = (type: PDFAnnotation['type']) => {
     const baseStyle = {
-      fontSize: 12,
+      fontSize: 14,
       fontFamily: 'Arial',
       color: '#000000',
       backgroundColor: 'transparent',
       borderColor: '#000000',
       borderWidth: 1,
+      fontWeight: 'normal',
+      fontStyle: 'normal'
     };
 
     switch (type) {
       case 'text':
-        return { ...baseStyle, backgroundColor: 'rgba(255, 255, 255, 0.8)' };
+        return { ...baseStyle, backgroundColor: 'transparent', borderColor: 'transparent', borderWidth: 0 };
       case 'signature':
-        return { ...baseStyle, borderColor: '#007bff', borderWidth: 2 };
+        return { ...baseStyle, backgroundColor: 'transparent', borderColor: 'transparent', borderWidth: 0 };
       case 'checkbox':
         return { ...baseStyle, fontSize: 16 };
       case 'image':
         return { ...baseStyle, backgroundColor: 'rgba(0, 0, 0, 0.1)' };
       case 'shape':
-        return { ...baseStyle, backgroundColor: 'rgba(59, 130, 246, 0.2)', borderColor: '#3b82f6', borderWidth: 2, borderRadius: 2 };
+        return { ...baseStyle, backgroundColor: '#3b82f6', borderColor: '#3b82f6', borderWidth: 2, borderRadius: 2 };
       case 'line':
         return { ...baseStyle, backgroundColor: 'transparent', color: '#000000', borderWidth: 2, borderRadius: 0 };
       default:
@@ -330,15 +333,16 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   // Individual annotation component to avoid hooks in render loop
   const AnnotationItem: React.FC<{ annotation: PDFAnnotation }> = ({ annotation }) => {
     const isSelected = selectedAnnotationId === annotation.id || selectedAnnotationIds.includes(annotation.id);
+    const [isHovered, setIsHovered] = useState(false);
     const style = annotation.style || getDefaultStyle(annotation.type);
     // Custom drag handler for this annotation
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
     
     const handleDrag = useCallback((deltaX: number, deltaY: number) => {
       if (selectedTool === 'select') {
-        setDragOffset({ x: deltaX / scale, y: deltaY / scale });
+        setDragOffset({ x: deltaX, y: deltaY });
       }
-    }, [scale, selectedTool]);
+    }, [selectedTool]);
 
     const handleDragEnd = useCallback(() => {
       if (dragOffset.x !== 0 || dragOffset.y !== 0) {
@@ -353,17 +357,17 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
 
     // Show tooltip during drag for shapes
     const showTooltip = isDragging && (annotation.type === 'shape' || annotation.type === 'line');
-    const tooltipX = (annotation.x + dragOffset.x) * scale;
-    const tooltipY = (annotation.y + dragOffset.y) * scale - 30;
+    const tooltipX = annotation.x + dragOffset.x;
+    const tooltipY = annotation.y + dragOffset.y - 30;
 
     const annotationStyle: React.CSSProperties = {
       position: 'absolute',
-      left: (annotation.x + dragOffset.x) * scale,
-      top: (annotation.y + dragOffset.y) * scale,
-      width: annotation.width * scale,
-      height: annotation.height * scale,
+      left: annotation.x + dragOffset.x,
+      top: annotation.y + dragOffset.y,
+      width: annotation.width,
+      height: annotation.height,
       zIndex: annotation.zIndex || 1,
-      border: annotation.type === 'line' || annotation.type === 'shape' ? 'none' : `${style.borderWidth}px solid ${style.borderColor}`,
+      border: annotation.type === 'line' || annotation.type === 'shape' || annotation.type === 'signature' ? 'none' : `${style.borderWidth}px solid ${style.borderColor}`,
       backgroundColor: style.backgroundColor,
       color: style.color,
       fontSize: `${style.fontSize}px`,
@@ -378,8 +382,9 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
       transform: `rotate(${annotation.rotation || 0}deg)`,
       transformOrigin: 'center',
       transition: isDragging ? 'none' : 'all 0.2s ease',
-      outline: isSelected ? '3px solid #3b82f6' : 'none',
-      outlineOffset: isSelected ? '4px' : '0',
+      outline: isSelected ? '3px solid hsl(var(--primary))' : (isHovered ? '2px solid hsl(var(--primary) / 0.7)' : 'none'),
+      outlineOffset: isSelected ? '4px' : (isHovered ? '2px' : '0'),
+      boxShadow: isHovered && !isSelected ? '0 4px 12px hsl(var(--primary) / 0.15)' : 'none',
     };
 
     const getIcon = () => {
@@ -417,7 +422,9 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
           e.stopPropagation();
           handleMouseDown(e);
         } : undefined}
-        className={`group relative ${isDragging ? 'opacity-75' : ''}`}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className={`group relative transition-all duration-200 ${isDragging ? 'opacity-75' : ''}`}
       >
         {annotation.type === 'line' ? (
           <div 
@@ -436,15 +443,36 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
             style={{
               width: '100%',
               height: '100%',
-              backgroundColor: style.backgroundColor || 'rgba(59, 130, 246, 0.2)',
+              backgroundColor: style.backgroundColor || '#3b82f6',
               borderColor: style.borderColor || '#3b82f6',
               borderWidth: `${style.borderWidth || 2}px`,
               borderStyle: 'solid',
               borderRadius: `${style.borderRadius || 2}px`
             }}
           />
+        ) : annotation.type === 'signature' && annotation.content && annotation.content.startsWith('data:image/') ? (
+          <img 
+            src={annotation.content} 
+            alt="Signature" 
+            className="w-full h-full object-contain"
+            style={{
+              maxWidth: '100%',
+              maxHeight: '100%',
+              objectFit: 'contain',
+              border: 'none'
+            }}
+          />
+
         ) : (
-          <div className="flex items-center justify-center w-full h-full">
+          <div 
+            className="flex items-center justify-center w-full h-full"
+            style={{
+              fontSize: annotation.type === 'text' ? `${style.fontSize}px` : undefined,
+              fontFamily: annotation.type === 'text' ? style.fontFamily : undefined,
+              fontWeight: annotation.type === 'text' ? style.fontWeight : undefined,
+              fontStyle: annotation.type === 'text' ? style.fontStyle : undefined
+            }}
+          >
             {annotation.content || getIcon()}
           </div>
         )}
@@ -456,7 +484,7 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
               // Line resize handles (left and right)
               <>
                 <div
-                  className="absolute w-2 h-2 bg-blue-500 border border-white rounded-full cursor-ew-resize hover:bg-blue-600 transition-colors"
+                  className="absolute w-2 h-2 bg-primary border border-white rounded-full cursor-ew-resize hover:bg-primary/80 transition-colors"
                   style={{
                     left: '-4px',
                     top: '50%',
@@ -466,7 +494,7 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
                   onMouseDown={(e) => handleResizeStart(e, 'w', annotation.id)}
                 />
                 <div
-                  className="absolute w-2 h-2 bg-blue-500 border border-white rounded-full cursor-ew-resize hover:bg-blue-600 transition-colors"
+                  className="absolute w-2 h-2 bg-primary border border-white rounded-full cursor-ew-resize hover:bg-primary/80 transition-colors"
                   style={{
                     right: '-4px',
                     top: '50%',
@@ -496,7 +524,7 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
                   return (
                     <div
                       key={direction}
-                      className="absolute w-2 h-2 bg-blue-500 border border-white rounded-full hover:bg-blue-600 transition-colors"
+                      className="absolute w-2 h-2 bg-primary border border-white rounded-full hover:bg-primary/80 transition-colors"
                       style={{
                         ...getPosition(),
                         zIndex: 1001
@@ -509,6 +537,8 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
             )}
           </>
         )}
+        
+
         
         {/* Drag Tooltip */}
         {showTooltip && (

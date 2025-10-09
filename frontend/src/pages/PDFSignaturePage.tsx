@@ -5,6 +5,7 @@ import PageWrapper from '../components/PageWrapper';
 import Toolbar from '../components/PDFEditor/Toolbar';
 import PDFViewer from '../components/PDFEditor/PDFViewer';
 import AnnotationEditToolbar from '../components/PDFEditor/AnnotationEditToolbar';
+import SignatureModal from '../components/SignatureModal';
 import { 
   PDFEditorState, 
   PDFAnnotation, 
@@ -15,8 +16,10 @@ import {
   FileText, 
   AlertCircle,
   Loader2,
-  CheckCircle
+  CheckCircle,
+  Sparkles
 } from 'lucide-react';
+import { Button } from '../components/ui/button';
 
 const PDFSignaturePage: React.FC = () => {
   const { user } = useAuth();
@@ -38,9 +41,17 @@ const PDFSignaturePage: React.FC = () => {
     isLoading: false,
     error: null,
   });
+  
+  // File info state
+  const [fileName, setFileName] = useState<string>('');
+  const [fileSize, setFileSize] = useState<number>(0);
 
   // Drag and drop state
   const [isDragOver, setIsDragOver] = useState(false);
+  
+  // Signature modal state
+  const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
+  const [pendingSignaturePosition, setPendingSignaturePosition] = useState<{ x: number; y: number; pageNumber: number } | null>(null);
 
   // Initialize history with empty state
   useEffect(() => {
@@ -107,6 +118,9 @@ const PDFSignaturePage: React.FC = () => {
         currentPage: 1,
         isLoading: false,
       }));
+      
+      setFileName(file.name);
+      setFileSize(file.size);
 
       toast({
         title: "PDF uploaded successfully",
@@ -156,6 +170,11 @@ const PDFSignaturePage: React.FC = () => {
 
   // Tool selection
   const handleToolSelect = useCallback((tool: string | null) => {
+    if (tool === 'signature') {
+      setIsSignatureModalOpen(true);
+      return;
+    }
+    
     setState(prev => ({
       ...prev,
       selectedTool: tool,
@@ -331,7 +350,7 @@ const PDFSignaturePage: React.FC = () => {
 
   const getDefaultContent = (type: PDFAnnotation['type']): string => {
     switch (type) {
-      case 'text': return 'Sample Text';
+      case 'text': return 'Text';
       case 'signature': return 'Signature';
       case 'checkbox': return '☐';
       case 'image': return 'Image';
@@ -343,25 +362,27 @@ const PDFSignaturePage: React.FC = () => {
 
   const getDefaultStyle = (type: PDFAnnotation['type']) => {
     const baseStyle = {
-      fontSize: 12,
+      fontSize: 14,
       fontFamily: 'Arial',
       color: '#000000',
       backgroundColor: 'transparent',
       borderColor: '#000000',
       borderWidth: 1,
+      fontWeight: 'normal',
+      fontStyle: 'normal'
     };
 
     switch (type) {
       case 'text':
-        return { ...baseStyle, backgroundColor: 'rgba(255, 255, 255, 0.8)', fontSize: 14 };
+        return { ...baseStyle, backgroundColor: 'transparent', borderColor: 'transparent', borderWidth: 0 };
       case 'signature':
-        return { ...baseStyle, borderColor: '#007bff', borderWidth: 2, fontSize: 16 };
+        return { ...baseStyle, backgroundColor: 'transparent', borderColor: 'transparent', borderWidth: 0, fontSize: 16 };
       case 'checkbox':
         return { ...baseStyle, fontSize: 16 };
       case 'image':
         return { ...baseStyle, backgroundColor: 'rgba(0, 0, 0, 0.1)' };
       case 'shape':
-        return { ...baseStyle, backgroundColor: 'rgba(0, 123, 255, 0.2)' };
+        return { ...baseStyle, backgroundColor: '#007bff' };
       case 'line':
         return { ...baseStyle, backgroundColor: 'transparent' };
       default:
@@ -371,17 +392,32 @@ const PDFSignaturePage: React.FC = () => {
 
   const canUndo = state.historyIndex > 0;
   const canRedo = state.historyIndex < state.history.length - 1;
+  
+  // Helper function to truncate filename
+  const getTruncatedFileName = (name: string) => {
+    // return name.length > 40 ? name.substring(0, 40) + '...' : name;
+    return name;
+  };
 
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Check if user is typing in an input field
+      const target = e.target as HTMLElement;
+      const isInputFocused = target && (
+        target.tagName === 'INPUT' || 
+        target.tagName === 'TEXTAREA' || 
+        target.contentEditable === 'true' ||
+        target.isContentEditable
+      );
+      
       if (e.key === 'Delete' && state.selectedAnnotationId) {
         handleAnnotationDelete(state.selectedAnnotationId);
       }
       if (e.key === 'Escape') {
         handleAnnotationSelect(null);
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'c' && state.selectedAnnotationId) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c' && state.selectedAnnotationId && !isInputFocused) {
         e.preventDefault();
         const annotation = state.annotations.find(a => a.id === state.selectedAnnotationId);
         if (annotation) {
@@ -389,7 +425,7 @@ const PDFSignaturePage: React.FC = () => {
           toast({ title: "Annotation copied", description: "Use Ctrl+V to paste" });
         }
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'v' && !isInputFocused) {
         e.preventDefault();
         const copiedData = localStorage.getItem('copiedAnnotation');
         if (copiedData) {
@@ -410,7 +446,7 @@ const PDFSignaturePage: React.FC = () => {
           toast({ title: "Annotation pasted", description: "Annotation has been duplicated and selected" });
         }
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a' && !isInputFocused) {
         e.preventDefault();
         const currentPageAnnotations = state.annotations
           .filter(a => a.pageNumber === state.currentPage)
@@ -428,7 +464,7 @@ const PDFSignaturePage: React.FC = () => {
           description: `Selected ${currentPageAnnotations.length} annotations on current page` 
         });
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'd' && state.selectedAnnotationId) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'd' && state.selectedAnnotationId && !isInputFocused) {
         e.preventDefault();
         const annotation = state.annotations.find(a => a.id === state.selectedAnnotationId);
         if (annotation) {
@@ -456,35 +492,50 @@ const PDFSignaturePage: React.FC = () => {
 
   return (
     <PageWrapper
-      title="PDF Editor"
-      description={state.file ? "Edit your PDF document" : "Professional PDF editing and annotation tool"}
+      title={state.file ? getTruncatedFileName(fileName) : "Document Workspace"}
+      description={state.file ? formatFileSize(fileSize) : "Edit, sign, and share documents"}
       icon={FileText}
+      actions={state.file ? (
+        <Button
+          variant="outline"
+          onClick={() => {
+            toast({
+              title: "AI Analysis",
+              description: "AI document analysis feature coming soon!",
+            });
+          }}
+          className="flex items-center gap-2"
+        >
+          <Sparkles className="h-4 w-4" />
+          Analyze with AI
+        </Button>
+      ) : undefined}
     >
       {!state.file ? (
-        <div className="bg-white rounded-xl shadow-sm border border-blue-100">
+        <div className="bg-card rounded-xl shadow-sm border border-border">
           <div className="p-6">
             <div 
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className={`bg-white rounded-2xl p-12 shadow-sm border-2 border-dashed transition-all duration-200 text-center ${
+              className={`bg-card rounded-2xl p-12 shadow-sm border-2 border-dashed transition-all duration-200 text-center ${
                 isDragOver 
-                  ? 'border-blue-500 bg-blue-50' 
-                  : 'border-blue-300 hover:border-blue-400 hover:bg-blue-50/50'
+                  ? 'border-primary bg-accent' 
+                  : 'border-border hover:border-primary/50 hover:bg-primary/5'
               }`}
             >
               
               <div className={`w-24 h-24 mx-auto mb-6 rounded-3xl flex items-center justify-center transition-all duration-200 ${
-                isDragOver ? 'bg-blue-200' : 'bg-blue-100'
+                isDragOver ? 'bg-primary/20' : 'bg-primary/10'
               }`}>
                 <Upload className={`h-12 w-12 ${isDragOver ? 'text-primary' : 'text-primary'}`} />
               </div>
               
-              <h2 className="text-3xl font-bold text-slate-900 mb-4">
+              <h2 className="text-3xl font-bold text-foreground mb-4">
                 {isDragOver ? 'Drop PDF Here' : 'Upload PDF Document'}
               </h2>
               
-              <p className="text-slate-600 mb-8 text-lg leading-relaxed">
+              <p className="text-muted-foreground mb-8 text-lg leading-relaxed">
                 {isDragOver 
                   ? 'Release to upload your PDF document'
                   : 'Drag and drop your PDF file here, or click to browse and upload'
@@ -511,19 +562,19 @@ const PDFSignaturePage: React.FC = () => {
                 className="hidden"
               />
 
-              <div className="mt-12 pt-8 border-t border-blue-200">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-slate-600">
+              <div className="mt-12 pt-8 border-t border-border">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-muted-foreground">
                   <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full" />
+                    <div className="w-2 h-2 bg-primary rounded-full" />
                     <span>Digital signatures & annotations</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full" />
+                    <div className="w-2 h-2 bg-primary rounded-full" />
                     <span>Text, shapes, and form fields</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full" />
-                    <span>Client-side processing</span>
+                    <div className="w-2 h-2 bg-primary rounded-full" />
+                    <span>Intelligent A.I document analysis</span>
                   </div>
                 </div>
               </div>
@@ -674,16 +725,16 @@ const PDFSignaturePage: React.FC = () => {
             {state.isLoading ? (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
-                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-                  <div className="text-gray-600">Processing PDF...</div>
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+                  <div className="text-muted-foreground">Opening your document...</div>
                 </div>
               </div>
             ) : state.error ? (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
-                  <AlertCircle className="h-8 w-8 mx-auto mb-4 text-red-600" />
-                  <div className="text-red-600 text-lg mb-2">Error loading PDF</div>
-                  <div className="text-gray-600">{state.error}</div>
+                  <AlertCircle className="h-8 w-8 mx-auto mb-4 text-destructive" />
+                  <div className="text-destructive text-lg mb-2">Couldn't open document</div>
+                  <div className="text-muted-foreground">Please try uploading your PDF again</div>
                 </div>
               </div>
             ) : (
@@ -700,14 +751,32 @@ const PDFSignaturePage: React.FC = () => {
                 onPageClick={(event, pageNumber) => {
                   // Handle page clicks for annotation placement or deselection
                   if (state.selectedTool && state.selectedTool !== 'select') {
-                    const rect = (event.target as HTMLElement).getBoundingClientRect();
+                    if (state.selectedTool === 'signature') {
+                      // Get the PDF viewer container to calculate position relative to current view
+                      const pdfContainer = event.currentTarget.closest('.react-pdf__Page');
+                      if (pdfContainer) {
+                        const rect = pdfContainer.getBoundingClientRect();
+                        const x = event.clientX - rect.left;
+                        const y = event.clientY - rect.top;
+                        
+                        setPendingSignaturePosition({ x, y, pageNumber });
+                        setIsSignatureModalOpen(true);
+                        return;
+                      }
+                    }
+                    
+                    // Get the annotation layer element (the clicked element)
+                    const annotationLayer = event.currentTarget as HTMLElement;
+                    const rect = annotationLayer.getBoundingClientRect();
+                    
+                    // Calculate exact click position relative to the annotation layer
                     const x = event.clientX - rect.left;
                     const y = event.clientY - rect.top;
                     
                     const newAnnotation: Omit<PDFAnnotation, 'id'> = {
                       type: state.selectedTool as PDFAnnotation['type'],
-                      x: x / state.scale,
-                      y: y / state.scale,
+                      x,
+                      y,
                       width: getDefaultWidth(state.selectedTool as PDFAnnotation['type']),
                       height: getDefaultHeight(state.selectedTool as PDFAnnotation['type']),
                       rotation: 0,
@@ -734,6 +803,67 @@ const PDFSignaturePage: React.FC = () => {
           </div>
         </div>
       )}
+      
+      <SignatureModal
+        isOpen={isSignatureModalOpen}
+        onClose={() => {
+          setIsSignatureModalOpen(false);
+          setPendingSignaturePosition(null);
+        }}
+        onSignatureCreate={(signatureData, type) => {
+          // Get current viewport center if no pending position
+          let x = 100;
+          let y = 100;
+          
+          if (pendingSignaturePosition) {
+            x = pendingSignaturePosition.x;
+            y = pendingSignaturePosition.y;
+          } else {
+            // Place signature in center of current visible viewport
+            const pdfContainer = document.querySelector('.react-pdf__Document');
+            const pdfPage = document.querySelector(`[data-page-number="${state.currentPage}"]`);
+            
+            if (pdfContainer && pdfPage) {
+              const containerRect = pdfContainer.getBoundingClientRect();
+              const pageRect = pdfPage.getBoundingClientRect();
+              
+              // Calculate position relative to the page, centered in viewport
+              x = Math.max(0, (containerRect.width / 2) - 100);
+              y = Math.max(0, (containerRect.height / 2) - 40);
+              
+              // Adjust if page is smaller than container
+              if (pageRect.width < containerRect.width) {
+                x = Math.min(x, pageRect.width - 200);
+              }
+              if (pageRect.height < containerRect.height) {
+                y = Math.min(y, pageRect.height - 80);
+              }
+            }
+          }
+          
+          const newAnnotation: Omit<PDFAnnotation, 'id'> = {
+            type: 'signature',
+            x,
+            y,
+            width: 200,
+            height: 80,
+            rotation: 0,
+            content: signatureData,
+            pageNumber: pendingSignaturePosition?.pageNumber || state.currentPage,
+            style: { ...getDefaultStyle('signature'), borderWidth: 0, borderColor: 'transparent' },
+            zIndex: state.annotations.length + 1,
+            signatureType: type,
+          };
+          
+          console.log('Adding signature annotation:', newAnnotation);
+          handleAnnotationAdd(newAnnotation);
+          
+          // Auto-switch to select tool
+          setState(prev => ({ ...prev, selectedTool: 'select' }));
+          setIsSignatureModalOpen(false);
+          setPendingSignaturePosition(null);
+        }}
+      />
     </PageWrapper>
   );
 };

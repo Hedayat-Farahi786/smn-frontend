@@ -47,7 +47,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
         };
       default:
         return {
-          bg: "bg-blue-100",
+          bg: "bg-primary/10",
           icon: "text-primary",
           trend: "text-primary",
         };
@@ -70,10 +70,10 @@ const StatsCard: React.FC<StatsCardProps> = ({
           )}
         </div>
         <div>
-          <div className="text-2xl font-bold text-slate-900 mb-1">
+          <div className="text-2xl font-bold text-foreground mb-1">
             {value}
           </div>
-          <div className="text-sm text-slate-600">{title}</div>
+          <div className="text-sm text-muted-foreground">{title}</div>
         </div>
       </CardContent>
     </Card>

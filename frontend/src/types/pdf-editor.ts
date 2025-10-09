@@ -44,6 +44,7 @@ export interface PDFAnnotation {
   hidden?: boolean;
   flippedH?: boolean;
   flippedV?: boolean;
+  signatureType?: 'text' | 'draw' | 'image';
 }
 
 export interface PDFViewerProps {

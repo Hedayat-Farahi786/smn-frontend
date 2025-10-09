@@ -28,6 +28,7 @@ import {
   Send,
   Archive,
   CreditCard,
+  FilePenLine,
 } from "lucide-react";
 import TopBar from "./TopBar";
 
@@ -73,7 +74,7 @@ const Layout: React.FC = () => {
 
   const navigation = [
     { name: t("nav.dashboard"), href: "/app/dashboard", icon: LayoutDashboard },
-    { name: t("nav.pdfSignature"), href: "/app/pdf-signature", icon: PenTool },
+    { name: t("nav.workspace"), href: "/app/pdf-signature", icon: FilePenLine },
     {
       name: t("nav.library"),
       href: "/app/library",
@@ -152,21 +153,21 @@ const Layout: React.FC = () => {
         <div
           className={`${
             isCollapsed ? "w-16" : "w-64"
-          } bg-white border-r border-blue-100 flex flex-col transition-all duration-500 ease-in-out relative`}
+          } bg-card border-r border-border flex flex-col transition-all duration-500 ease-in-out relative`}
         >
           {/* Header with Logo and Toggle */}
-          <div className="p-6 border-b border-blue-100">
+          <div className="p-6 border-b border-border">
             <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
               <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                   <FileSignature className="h-4 w-4 text-white" />
                 </div>
                 {!isCollapsed && (
-                  <div className="transition-opacity duration-500">
+                  <div className="transition-opacity duration-500 text-center">
                     <h1 className="text-lg font-semibold text-slate-900">SignMeNow</h1>
-                    <p className="text-xs text-slate-600">
+                    {/* <p className="text-xs text-slate-600">
                       E-Signature Platform
-                    </p>
+                    </p> */}
                   </div>
                 )}
               </div>
@@ -179,7 +180,7 @@ const Layout: React.FC = () => {
               variant="outline"
               size="sm"
               onClick={toggleSidebar}
-              className="h-6 w-6 p-0 rounded-full bg-white border-blue-200 shadow-md hover:bg-blue-50 transition-all duration-200"
+              className="h-6 w-6 p-0 rounded-full bg-card border-border shadow-md hover:bg-accent transition-all duration-200"
             >
               {isCollapsed ? (
                 <ChevronRight className="h-3 w-3" />
@@ -201,16 +202,14 @@ const Layout: React.FC = () => {
                     isCollapsed ? "px-2" : "px-3"
                   } ${
                     isActive 
-                      ? "bg-blue-100 text-primary hover:bg-blue-100 shadow-sm border border-blue-200" 
-                      : "text-slate-700 hover:bg-blue-50 hover:text-primary border border-transparent"
+                      ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary shadow-sm border border-primary/20" 
+                      : "text-muted-foreground hover:bg-primary/5 hover:text-foreground border border-transparent"
                   }`}
                   onClick={() => navigate(item.href)}
                 >
                   <div className="relative">
                     <item.icon
-                      className={`h-4 w-4 transition-all duration-300 ${
-                        isActive ? "fill-current stroke-1" : "stroke-current"
-                      }`}
+                      className={`h-4 w-4 transition-all duration-300 stroke-current`}
                     />
                     {isCollapsed && item.badge && (
                       <span className="absolute -top-1 -right-1 bg-primary rounded-full w-2 h-2"></span>
@@ -256,7 +255,7 @@ const Layout: React.FC = () => {
           </nav>
 
           {/* Profile Navigation */}
-          <div className="px-3 py-2 border-t border-blue-100">
+          <div className="px-3 py-2 border-t border-border">
             <div className="text-xs font-medium text-slate-600 mb-2 px-3">
               {!isCollapsed && "Profile"}
             </div>
@@ -271,14 +270,14 @@ const Layout: React.FC = () => {
                       isCollapsed ? "px-2" : "px-3"
                     } ${
                       isActive 
-                        ? "bg-blue-100 text-primary hover:bg-blue-100" 
-                        : "text-slate-600 hover:bg-blue-50 hover:text-primary"
+                        ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary" 
+                        : "text-muted-foreground hover:bg-primary/5 hover:text-foreground"
                     }`}
                     onClick={() => navigate(item.href)}
                   >
                     <item.icon
                       className={`h-4 w-4 transition-all duration-300 ${
-                        isActive ? "fill-current stroke-1" : "stroke-current"
+                        isActive ? "fill-current" : "stroke-current"
                       } ${
                         isCollapsed ? "" : "mr-3"
                       }`}
@@ -310,14 +309,14 @@ const Layout: React.FC = () => {
           </div>
 
           {/* User Profile Section with Claude-style dropdown */}
-          <div className="p-4 border-t border-blue-100" ref={userMenuRef as any}>
+          <div className="p-4 border-t border-border" ref={userMenuRef as any}>
             <div className="relative">
               <div 
-                className={`flex items-center ${isCollapsed ? 'justify-center px-0 py-2' : 'gap-3 px-3 py-3'} rounded-xl hover:bg-blue-50 transition-all duration-200 cursor-pointer group`}
+                className={`flex items-center ${isCollapsed ? 'justify-center px-0 py-2' : 'gap-3 px-3 py-3'} rounded-xl hover:bg-primary/5 transition-all duration-200 cursor-pointer group`}
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 role="button"
               >
-                <div className={`${isCollapsed ? 'w-8 h-8' : 'w-10 h-10'} rounded-full overflow-hidden bg-blue-100 flex items-center justify-center border border-blue-200`}>
+                <div className={`${isCollapsed ? 'w-8 h-8' : 'w-10 h-10'} rounded-full overflow-hidden bg-primary/10 flex items-center justify-center border border-primary/20`}>
                   {user?.profilePicture && !imgBroken ? (
                     <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover" onError={() => setImgBroken(true)} />
                   ) : (
@@ -341,24 +340,24 @@ const Layout: React.FC = () => {
 
               {/* Dropdown panel - opens upward */}
               {userMenuOpen && (
-                <div className={`absolute ${isCollapsed ? 'left-1/2 transform -translate-x-1/2 w-56' : 'left-0 w-64'} bottom-full mb-2 rounded-xl border border-blue-200 bg-white p-2 shadow-xl z-50 text-sm`}>
-                  <div className="px-4 py-3 bg-blue-50 rounded-lg mb-2">
+                <div className={`absolute ${isCollapsed ? 'left-1/2 transform -translate-x-1/2 w-56' : 'left-0 w-64'} bottom-full mb-2 rounded-xl border border-border bg-card p-2 shadow-xl z-50 text-sm`}>
+                  <div className="px-4 py-3 bg-accent/10 rounded-lg mb-2">
                     <p className="text-sm font-semibold text-slate-900 truncate">Hedayat Farahi</p>
                     <p className="text-xs text-slate-600 truncate">{user?.email || 'hedayat@example.com'}</p>
                   </div>
-                  <button className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-blue-50 hover:text-primary text-sm transition-colors" onClick={() => { navigate('/app/profile'); setUserMenuOpen(false); }}>
+                  <button className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-primary/5 hover:text-foreground text-sm transition-colors" onClick={() => { navigate('/app/profile'); setUserMenuOpen(false); }}>
                     <div className="flex items-center gap-3"><User className="h-4 w-4 text-slate-500"/><span className="font-medium text-slate-700">Profile</span></div>
                   </button>
                   {accountType === 'Free' && (
-                    <button className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-blue-50 hover:text-primary text-sm transition-colors" onClick={() => { /* upgrade */ setUserMenuOpen(false); }}>
+                    <button className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-primary/5 hover:text-foreground text-sm transition-colors" onClick={() => { /* upgrade */ setUserMenuOpen(false); }}>
                       <div className="flex items-center gap-3"><CreditCard className="h-4 w-4 text-slate-500"/><span className="font-medium text-slate-700">Upgrade plan</span></div>
                     </button>
                   )}
-                  <button className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-blue-50 hover:text-primary text-sm transition-colors" onClick={() => { navigate('/app/settings'); setUserMenuOpen(false); }}>
+                  <button className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-primary/5 hover:text-foreground text-sm transition-colors" onClick={() => { navigate('/app/settings'); setUserMenuOpen(false); }}>
                     <div className="flex items-center gap-3"><Settings className="h-4 w-4 text-slate-500"/><span className="font-medium text-slate-700">Settings</span></div>
                   </button>
-                  <div className="h-px bg-slate-200 my-2" />
-                  <button className="w-full text-left px-3 py-2.5 rounded-lg text-red-600 hover:bg-red-50 text-sm transition-colors" onClick={() => { handleLogout(); setUserMenuOpen(false); }}>
+                  <div className="h-px bg-border my-2" />
+                  <button className="w-full text-left px-3 py-2.5 rounded-lg text-destructive hover:bg-destructive/10 text-sm transition-colors" onClick={() => { handleLogout(); setUserMenuOpen(false); }}>
                     <div className="flex items-center gap-3"><LogOut className="h-4 w-4 text-red-500"/><span className="font-medium">Log out</span></div>
                   </button>
                 </div>

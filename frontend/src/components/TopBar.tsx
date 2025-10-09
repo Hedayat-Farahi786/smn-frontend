@@ -60,13 +60,13 @@ const TopBar: React.FC = () => {
   );
 
   return (
-    <div className="h-16 bg-white dark:bg-slate-800 border-b border-blue-100 dark:border-blue-800 shadow-sm">
+    <div className="h-16 bg-card border-b border-border shadow-sm">
       <div className="flex items-center justify-between h-full px-6">
         {/* Left side - Date and Time */}
         <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2 text-sm text-primary dark:text-blue-400">
-            <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            <span className="font-medium text-black">{formatDate(currentTime)}</span>
+          <div className="flex items-center space-x-2 text-sm text-primary">
+            <Calendar className="h-4 w-4 text-primary" />
+            <span className="font-medium text-foreground">{formatDate(currentTime)}</span>
           </div>
           {/* <div className="flex items-center space-x-2 text-sm text-muted-foreground">
             <Clock className="h-4 w-4" />
@@ -135,7 +135,7 @@ const TopBar: React.FC = () => {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-9 px-3 hover:bg-blue-50"
+                className="h-9 px-3 hover:bg-accent"
               >
                 <img 
                   src={currentLang?.flagUrl} 
@@ -145,15 +145,15 @@ const TopBar: React.FC = () => {
                 <span className="text-sm font-medium">
                   {currentLang?.name}
                 </span>
-                <ChevronDown className="h-3 w-3 ml-1 text-blue-600" />
+                <ChevronDown className="h-3 w-3 ml-1 text-primary" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 border-blue-100">
+            <DropdownMenuContent align="end" className="w-48">
               {availableLanguages.map((lang) => (
                 <DropdownMenuItem
                   key={lang.code}
                   onClick={() => changeLanguage(lang.code)}
-                  className="flex items-center space-x-2 hover:bg-blue-50"
+                  className="flex items-center space-x-2 hover:bg-accent"
                 >
                   <img 
                     src={lang.flagUrl} 

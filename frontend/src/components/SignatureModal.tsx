@@ -15,13 +15,14 @@ import {
   Camera,
   X,
   Check,
+  Trash2,
 } from "lucide-react";
 import SignaturePad from "signature_pad";
 
 interface SignatureModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (signatureData: string, method: 'type' | 'draw' | 'upload' | 'camera') => void;
+  onSignatureCreate: (signatureData: string, method: 'type' | 'draw' | 'upload' | 'camera') => void;
 }
 
 type SignatureMethod = 'type' | 'draw' | 'upload' | 'camera';
@@ -29,7 +30,7 @@ type SignatureMethod = 'type' | 'draw' | 'upload' | 'camera';
 const SignatureModal: React.FC<SignatureModalProps> = ({
   isOpen,
   onClose,
-  onSave,
+  onSignatureCreate,
 }) => {
   const [method, setMethod] = useState<SignatureMethod>('type');
   const [signatureName, setSignatureName] = useState('Alex Appleseed');
@@ -37,6 +38,8 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
   const [selectedFont, setSelectedFont] = useState(0);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [saveSignature, setSaveSignature] = useState(true);
+  const [hasDrawnSignature, setHasDrawnSignature] = useState(false);
+  const [savedSignature, setSavedSignature] = useState<string | null>(null);
   
   const signaturePadRef = useRef<HTMLCanvasElement>(null);
   const signaturePad = useRef<SignaturePad | null>(null);
@@ -53,46 +56,78 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
     'Indie Flower', 'Shadows Into Light', 'Permanent Marker'
   ];
 
+  // Load saved signature
+  useEffect(() => {
+    const saved = localStorage.getItem('savedSignature');
+    if (saved) {
+      setSavedSignature(saved);
+    }
+  }, [isOpen]);
+
   // Initialize signature pad
   useEffect(() => {
     if (method === 'draw' && signaturePadRef.current && isOpen) {
-      const canvas = signaturePadRef.current;
-      const rect = canvas.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
+      // Small delay to ensure canvas is properly rendered
+      const timer = setTimeout(() => {
+        const canvas = signaturePadRef.current;
+        if (!canvas) return;
+        
+        // Set canvas display size
+        canvas.style.width = '100%';
+        canvas.style.height = '160px';
+        
+        // Get actual display size
+        const rect = canvas.getBoundingClientRect();
+        
+        // Set high-resolution canvas size (4x for ultra-high quality)
+        const scaleFactor = 4;
+        canvas.width = rect.width * scaleFactor;
+        canvas.height = rect.height * scaleFactor;
+        
+        // Scale the drawing context
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.scale(scaleFactor, scaleFactor);
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 2;
+          // Enable anti-aliasing for smoother lines
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+        }
+        
+        // Clear any existing signature pad
+        if (signaturePad.current) {
+          signaturePad.current.off();
+        }
+        
+        // Initialize signature pad with high-quality settings
+        signaturePad.current = new SignaturePad(canvas, {
+          backgroundColor: "rgba(0, 0, 0, 0)",
+          penColor: '#000000',
+          minWidth: 1.5,
+          maxWidth: 3.5,
+          throttle: 8,
+          minDistance: 2,
+          velocityFilterWeight: 0.7,
+          onEnd: () => {
+            const isEmpty = signaturePad.current ? signaturePad.current.isEmpty() : true;
+            setHasDrawnSignature(!isEmpty);
+            console.log('Signature pad onEnd - isEmpty:', isEmpty, 'hasDrawnSignature:', !isEmpty);
+          }
+        });
+      }, 100);
       
-      // Set actual canvas size in memory (scaled for retina displays)
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      
-      // Scale the drawing context so everything draws at the correct size
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.scale(dpr, dpr);
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.strokeStyle = selectedColor;
-        ctx.lineWidth = 2;
-      }
-      
-      // Initialize signature pad
-      signaturePad.current = new SignaturePad(canvas, {
-        backgroundColor: "rgba(255, 255, 255, 1)",
-        penColor: selectedColor,
-        minWidth: 1,
-        maxWidth: 3,
-        throttle: 8,
-        minDistance: 1,
-      });
-      
-      console.log('Signature pad initialized');
+      return () => clearTimeout(timer);
     }
-  }, [method, isOpen, selectedColor]);
+  }, [method, isOpen]);
 
   const handleMethodChange = (newMethod: SignatureMethod) => {
     setMethod(newMethod);
+    setHasDrawnSignature(false);
     if (newMethod === 'draw' && signaturePad.current) {
       signaturePad.current.clear();
-      console.log('Signature pad cleared for draw method');
     }
   };
 
@@ -120,23 +155,89 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
     
     switch (method) {
       case 'type':
-        // Create a canvas with typed signature
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        if (ctx) {
-          canvas.width = 400;
-          canvas.height = 100;
-          ctx.font = `24px ${fonts[selectedFont]}`;
+        if (ctx && signatureName.trim()) {
+          // High-resolution scaling for crisp text
+          const scaleFactor = 4;
+          const fontSize = 36 * scaleFactor;
+          
+          // Measure text at high resolution
+          ctx.font = `${fontSize}px '${fonts[selectedFont]}', cursive`;
+          const metrics = ctx.measureText(signatureName.trim());
+          const textWidth = metrics.width;
+          const textHeight = fontSize * 1.4; // Better height calculation
+          
+          // Set high-resolution canvas size
+          canvas.width = textWidth + (20 * scaleFactor);
+          canvas.height = textHeight + (20 * scaleFactor);
+          
+          // Enable high-quality rendering
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.textRenderingOptimization = 'optimizeQuality';
+          
+          // Clear and render text
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.font = `${fontSize}px '${fonts[selectedFont]}', cursive`;
           ctx.fillStyle = selectedColor;
           ctx.textAlign = 'left';
           ctx.textBaseline = 'middle';
-          ctx.fillText(signatureName, 20, 50);
-          signatureData = canvas.toDataURL('image/png');
+          ctx.fillText(signatureName.trim(), 10 * scaleFactor, canvas.height / 2);
+          
+          signatureData = canvas.toDataURL('image/png', 1.0);
         }
         break;
       case 'draw':
         if (signaturePad.current && !signaturePad.current.isEmpty()) {
-          signatureData = signaturePad.current.toDataURL('image/png');
+          const canvas = signaturePadRef.current;
+          if (!canvas) break;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            // Get image data to find bounds
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            let minX = canvas.width, minY = canvas.height, maxX = 0, maxY = 0;
+            
+            // Find bounding box of non-transparent pixels
+            for (let y = 0; y < canvas.height; y++) {
+              for (let x = 0; x < canvas.width; x++) {
+                const alpha = data[(y * canvas.width + x) * 4 + 3];
+                if (alpha > 0) {
+                  minX = Math.min(minX, x);
+                  minY = Math.min(minY, y);
+                  maxX = Math.max(maxX, x);
+                  maxY = Math.max(maxY, y);
+                }
+              }
+            }
+            
+            if (maxX > minX && maxY > minY) {
+              // Create high-resolution trimmed canvas
+              const trimmedCanvas = document.createElement('canvas');
+              const trimmedCtx = trimmedCanvas.getContext('2d');
+              if (trimmedCtx) {
+                const padding = 40; // Larger padding for high-res
+                trimmedCanvas.width = (maxX - minX) + (padding * 2);
+                trimmedCanvas.height = (maxY - minY) + (padding * 2);
+                
+                // Enable high-quality rendering
+                trimmedCtx.imageSmoothingEnabled = true;
+                trimmedCtx.imageSmoothingQuality = 'high';
+                
+                // Copy trimmed signature with high quality
+                trimmedCtx.drawImage(
+                  canvas,
+                  minX - padding, minY - padding, trimmedCanvas.width, trimmedCanvas.height,
+                  0, 0, trimmedCanvas.width, trimmedCanvas.height
+                );
+                
+                signatureData = trimmedCanvas.toDataURL('image/png', 1.0);
+              }
+            } else {
+              signatureData = canvas.toDataURL('image/png', 1.0);
+            }
+          }
         }
         break;
       case 'upload':
@@ -144,15 +245,24 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
           signatureData = uploadedImage;
         }
         break;
-      case 'camera':
-        // Camera functionality would be implemented here
-        // For now, we'll use a placeholder
-        break;
     }
     
+    console.log('Signature data:', signatureData ? 'Generated' : 'Empty');
+    console.log('Method:', method);
+    console.log('Can save:', canSave());
+    
     if (signatureData) {
-      onSave(signatureData, method);
+      // Save signature if checkbox is checked and method is draw
+      if (saveSignature && method === 'draw') {
+        setSavedSignature(signatureData);
+        localStorage.setItem('savedSignature', signatureData);
+      }
+      
+      console.log('Calling onSignatureCreate');
+      onSignatureCreate(signatureData, method);
       handleClose();
+    } else {
+      console.log('No signature data to save');
     }
   };
 
@@ -162,9 +272,12 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
     setSelectedColor('#000000');
     setSelectedFont(0);
     setUploadedImage(null);
+    setSaveSignature(true);
+    setHasDrawnSignature(false);
     if (signaturePad.current) {
       signaturePad.current.clear();
-      console.log('Signature pad cleared on close');
+      signaturePad.current.off(); // Clean up event listeners
+      signaturePad.current = null; // Reset the reference
     }
     onClose();
   };
@@ -178,7 +291,7 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
       case 'upload':
         return uploadedImage !== null;
       case 'camera':
-        return false; // Not implemented yet
+        return false;
       default:
         return false;
     }
@@ -207,8 +320,8 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
                   onClick={() => handleMethodChange(item.id as SignatureMethod)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
                     method === item.id
-                      ? 'bg-blue-50 border-blue-200 text-primary'
-                      : 'bg-white border-blue-100 text-primary hover:bg-blue-50'
+                      ? 'bg-primary/10 border-primary/20 text-primary'
+                      : 'bg-card border-border text-primary hover:bg-primary/5'
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -218,19 +331,21 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
             })}
           </div>
 
-          {/* Save Signature Checkbox */}
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="save-signature"
-              checked={saveSignature}
-              onChange={(e) => setSaveSignature(e.target.checked)}
-              className="rounded border-gray-300"
-            />
-            <Label htmlFor="save-signature" className="text-sm text-gray-700">
-              Save signature
-            </Label>
-          </div>
+          {/* Save Signature Checkbox - only show for draw method */}
+          {method === 'draw' && (
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="save-signature"
+                checked={saveSignature}
+                onChange={(e) => setSaveSignature(e.target.checked)}
+                className="rounded border-primary text-primary focus:ring-primary"
+              />
+              <Label htmlFor="save-signature" className="text-sm text-gray-700">
+                Save signature
+              </Label>
+            </div>
+          )}
 
           {/* Content based on method */}
           {method === 'type' && (
@@ -273,8 +388,8 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
                       onClick={() => setSelectedFont(index)}
                       className={`p-3 border rounded-lg text-left transition-colors ${
                         selectedFont === index
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:bg-gray-50'
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border hover:bg-primary/5'
                       }`}
                     >
                       <div
@@ -295,16 +410,37 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
 
           {method === 'draw' && (
             <div className="space-y-4">
+              {/* Saved Signature */}
+              {savedSignature && (
+                <div>
+                  <Label className="text-sm font-medium">Saved Signature</Label>
+                  <div className="mt-2">
+                    <button
+                      onClick={() => {
+                        onSignatureCreate(savedSignature, 'draw');
+                        handleClose();
+                      }}
+                      className="p-2 border border-border rounded-lg hover:bg-primary/5 transition-colors w-full"
+                    >
+                      <img src={savedSignature} alt="Saved signature" className="w-full h-12 object-contain" />
+                    </button>
+                  </div>
+                </div>
+              )}
+              
               <div>
                 <Label className="text-sm font-medium">Draw your signature</Label>
-                <div className="border border-gray-300 rounded-lg mt-2 bg-white">
+                <div className="border border-border rounded-lg mt-2 bg-card">
                   <canvas
                     ref={signaturePadRef}
-                    className="w-full h-40 cursor-crosshair block border border-gray-200"
+                    className="w-full cursor-crosshair block"
                     style={{
                       touchAction: 'none',
                       userSelect: 'none',
-                      backgroundColor: 'white'
+                      backgroundColor: 'white',
+                      height: '160px',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px'
                     }}
                   />
                 </div>
@@ -312,13 +448,17 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => signaturePad.current?.clear()}
+                    onClick={() => {
+                      signaturePad.current?.clear();
+                      setHasDrawnSignature(false);
+                    }}
                     className="text-xs"
                   >
+                    <Trash2 className="h-3 w-3 mr-1" />
                     Clear
                   </Button>
-                  <span className="text-xs text-gray-500">
-                    {signaturePad.current && !signaturePad.current.isEmpty() ? 'Signature drawn' : 'Draw your signature above'}
+                  <span className="text-xs text-muted-foreground">
+                    {hasDrawnSignature ? 'Signature drawn' : 'Draw your signature above'}
                   </span>
                 </div>
               </div>
@@ -395,10 +535,10 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
             <Button
               onClick={handleSave}
               disabled={!canSave()}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-primary hover:bg-primary/90"
             >
               <Check className="h-4 w-4 mr-2" />
-              Save
+              Add to Document
             </Button>
           </div>
         </div>

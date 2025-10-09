@@ -108,14 +108,14 @@ const RegisterPage: React.FC = () => {
   };
 
   return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100 p-4">
-            <Card className="w-full max-w-2xl mx-auto shadow-xl border-blue-200">
+        <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/20 p-4">
+            <Card className="w-full max-w-2xl mx-auto shadow-xl">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg">
+            {/* <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg">
               <FileSignature className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-slate-900">SignMeNow</span>
+            </div> */}
+            <span className="text-xl font-bold text-foreground border-primary border-b pb-2">SignMeNow</span>
           </div>
           <CardTitle className="text-2xl font-bold">
             {t("auth.createAccount")}
@@ -416,7 +416,7 @@ const RegisterPage: React.FC = () => {
           <Button
             type="button"
             variant="outline"
-            className="w-full border-blue-200 hover:bg-blue-50"
+            className="w-full hover:bg-accent"
             onClick={() => {
               // Placeholder for Google login - no actual implementation
               alert("Google login feature coming soon!");

@@ -229,7 +229,7 @@ const DashboardPage: React.FC = () => {
       description="Manage your PDF signatures and documents"
       actions={
         <>
-          <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0">
+          <Button className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground border-0 shadow-lg">
             <Crown className="h-4 w-4 mr-2" />
             Upgrade to Pro
           </Button>
@@ -255,13 +255,13 @@ const DashboardPage: React.FC = () => {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Recent Activity */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-sm border border-blue-100 h-[480px] flex flex-col">
-              <div className="p-6 border-b border-blue-100 flex-shrink-0">
+            <div className="bg-card rounded-xl shadow-sm border border-border h-[480px] flex flex-col">
+              <div className="p-6 border-b border-border flex-shrink-0">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-slate-900">
+                  <h3 className="text-lg font-semibold text-foreground">
                     Recent Activity
                   </h3>
-                  <Button variant="outline" size="sm" className="border-blue-200 hover:bg-blue-50">
+                  <Button variant="outline" size="sm" className="hover:bg-accent">
                     <Filter className="h-4 w-4 mr-2" />
                     Filter
                   </Button>
@@ -273,16 +273,16 @@ const DashboardPage: React.FC = () => {
                   return (
                     <div
                       key={index}
-                      className="flex items-start space-x-4 p-4 hover:bg-slate-50 rounded-lg transition-colors"
+                      className="flex items-start space-x-4 p-4 hover:bg-primary/5 rounded-lg transition-colors"
                     >
-                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-primary text-sm font-medium flex-shrink-0">
+                      <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary text-sm font-medium flex-shrink-0">
                         {activity.avatar}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-900 leading-relaxed">
+                        <p className="text-sm font-medium text-foreground leading-relaxed">
                           {activity.text}
                         </p>
-                        <div className="flex items-center mt-2 text-xs text-slate-500">
+                        <div className="flex items-center mt-2 text-xs text-muted-foreground">
                           <ActivityIcon className="h-3 w-3 mr-1" />
                           {activity.time}
                         </div>
@@ -296,9 +296,9 @@ const DashboardPage: React.FC = () => {
 
           {/* Quick Actions */}
           <div>
-            <div className="bg-white rounded-xl shadow-sm border border-blue-100 h-[480px] flex flex-col">
-              <div className="p-6 border-b border-blue-100 flex-shrink-0">
-                <h3 className="text-lg font-semibold text-slate-900">
+            <div className="bg-card rounded-xl shadow-sm border border-border h-[480px] flex flex-col">
+              <div className="p-6 border-b border-border flex-shrink-0">
+                <h3 className="text-lg font-semibold text-foreground">
                   Quick Actions
                 </h3>
               </div>
@@ -307,20 +307,20 @@ const DashboardPage: React.FC = () => {
                   <button
                     key={action.label}
                     onClick={action.onClick}
-                    className="w-full flex items-center gap-4 p-4 hover:bg-blue-50 rounded-lg transition-colors text-left group"
+                    className="w-full flex items-center gap-4 p-4 hover:bg-primary/5 rounded-lg transition-colors text-left group"
                   >
                     <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center group-hover:bg-primary/90 transition-colors">
-                      <action.icon className="h-5 w-5 text-white" />
+                      <action.icon className="h-5 w-5 text-primary-foreground" />
                     </div>
                     <div className="flex-1">
-                      <div className="font-medium text-slate-900">
+                      <div className="font-medium text-foreground">
                         {action.label}
                       </div>
-                      <div className="text-xs text-slate-500 mt-1">
+                      <div className="text-xs text-muted-foreground mt-1">
                         {action.description}
                       </div>
                     </div>
-                    <div className="text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
                       {action.shortcut}
                     </div>
                   </button>

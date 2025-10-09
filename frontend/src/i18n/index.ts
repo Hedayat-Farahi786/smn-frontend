@@ -38,7 +38,7 @@ const en = {
       inbox: "Inbox",
       outbox: "Outbox",
       archive: "Archive",
-      pdfSignature: "PDF Signature",
+      workspace: "Workspace",
       settings: "Settings",
       myProfile: "My Profile",
       messages: "Messages",

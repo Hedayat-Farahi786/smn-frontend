@@ -20,10 +20,10 @@ const PageWrapper: React.FC<PageWrapperProps> = ({
   className = "",
 }) => {
   return (
-    <div className={`min-h-screen bg-blue-50/70 ${className}`}>
+    <div className={`min-h-screen bg-background ${className}`}>
       <div className="p-6 space-y-6">
         {/* Standardized Header */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-blue-100">
+        <div className="bg-card rounded-xl p-6 shadow-sm border border-border">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-4">
               {Icon && (
@@ -32,10 +32,10 @@ const PageWrapper: React.FC<PageWrapperProps> = ({
                 </div>
               )}
               <div>
-                <h1 className="text-2xl font-bold text-slate-900">
+                <h1 className="text-2xl font-bold text-foreground">
                   {title}
                 </h1>
-                <p className="text-slate-600 mt-1">
+                <p className="text-muted-foreground mt-1">
                   {description}
                 </p>
               </div>

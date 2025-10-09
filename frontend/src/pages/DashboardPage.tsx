@@ -5,239 +5,409 @@ import {
   Users,
   CheckCircle,
   Clock,
-  ArrowUpRight,
-  ArrowDownRight,
   Plus,
   Eye,
   Edit,
   PenTool,
+  ArrowUpRight,
+  TrendingUp,
+  Bell,
+  Search,
+  Filter,
+  Calendar,
+  Zap,
+  Shield,
+  Sparkles,
+  LayoutDashboard,
+  FileSignature,
+  Settings,
+  User,
+  Inbox,
+  MessageSquare,
+  Send,
+  Brain,
+  Crown,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
+import PageWrapper from "../components/PageWrapper";
+import StatsCard from "../components/StatsCard";
+import { useNavigate } from "react-router-dom";
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
-  const getStatusBadgeColor = (status: string) => {
-    if (status === "Signed") return "bg-green-100 text-green-800";
-    if (status === "Pending") return "bg-yellow-100 text-yellow-800";
-    return "bg-gray-100 text-gray-800";
+  // Dynamic greeting based on current time
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
   };
 
   const stats = [
     {
-      title: "Documents in Library",
-      value: "12",
-      change: "+2 this week",
-      trend: "up",
-      icon: FileText,
+      title: "Documents Signed",
+      value: "124",
+      change: "+12",
+      trend: "up" as const,
+      icon: FileSignature,
     },
     {
-      title: "Pending Signatures",
-      value: "3",
-      change: "2 overdue",
-      trend: "down",
+      title: "Awaiting Signature",
+      value: "8",
+      change: "-3",
+      trend: "down" as const,
       icon: Clock,
     },
     {
-      title: "Documents Sent",
-      value: "5",
-      change: "+1 today",
-      trend: "up",
-      icon: Users,
+      title: "Inbox",
+      value: "34",
+      change: "+5",
+      trend: "up" as const,
+      icon: Inbox,
     },
     {
-      title: "Completed Documents",
-      value: "28",
-      change: "+4 this week",
-      trend: "up",
-      icon: CheckCircle,
+      title: "Messages",
+      value: "16",
+      change: "+23",
+      trend: "up" as const,
+      icon: MessageSquare,
     },
   ];
 
-  const activities = [
+  const recentActivities = [
     {
-      icon: CheckCircle,
       text: "Employment Agreement completed by John Smith",
-      time: "2m",
+      time: "2 minutes ago",
+      type: "completed",
+      avatar: "JS",
     },
     {
-      icon: Clock,
       text: "NDA signature pending from Sarah Johnson",
-      time: "5m",
+      time: "5 minutes ago",
+      type: "pending",
+      avatar: "SJ",
     },
     {
-      icon: FileText,
-      text: "Service Contract uploaded to Library",
-      time: "1h",
+      text: "Service Contract uploaded by Michael Chen",
+      time: "12 minutes ago",
+      type: "uploaded",
+      avatar: "MC",
     },
-    { icon: Users, text: "Lease Agreement sent to 3 signers", time: "2h" },
+    {
+      text: "Team meeting notes shared with 5 members",
+      time: "1 hour ago",
+      type: "shared",
+      avatar: "TM",
+    },
+    {
+      text: "Quarterly report signed and archived",
+      time: "2 hours ago",
+      type: "completed",
+      avatar: "QR",
+    },
+    {
+      text: "Partnership agreement reviewed by Legal team",
+      time: "3 hours ago",
+      type: "shared",
+      avatar: "LT",
+    },
+    {
+      text: "Invoice template updated by Finance dept",
+      time: "4 hours ago",
+      type: "uploaded",
+      avatar: "FD",
+    },
+    {
+      text: "Client contract awaiting final approval",
+      time: "5 hours ago",
+      type: "pending",
+      avatar: "CC",
+    },
   ];
 
   const quickActions = [
-    { icon: Plus, label: "Upload Document", action: "upload" },
-    { icon: Users, label: "Send for Signing", action: "send" },
-    { icon: FileText, label: "View Library", action: "library" },
-    { icon: PenTool, label: "Sign Document", action: "sign" },
+    {
+      icon: Plus,
+      label: "Upload Document",
+      description: "Add new PDF to sign",
+      shortcut: "Ctrl+U",
+      onClick: () => navigate('/pdf-signature')
+    },
+    {
+      icon: FileSignature,
+      label: "Sign Document",
+      description: "Sign existing PDF",
+      shortcut: "Ctrl+S",
+      onClick: () => navigate('/pdf-signature')
+    },
+    {
+      icon: Send,
+      label: "Request a Signature",
+      description: "Send document for signing",
+      shortcut: "Ctrl+R",
+      onClick: () => {}
+    },
+    {
+      icon: Brain,
+      label: "Analyze with A.I",
+      description: "AI document insights",
+      shortcut: "Ctrl+A",
+      onClick: () => {}
+    },
   ];
 
+  const recentDocuments = [
+    {
+      name: "Employment Agreement - John Smith",
+      status: "Completed",
+      date: "2 hours ago",
+      progress: 100,
+      priority: "high",
+    },
+    {
+      name: "NDA - TechCorp Partnership", 
+      status: "Pending",
+      date: "1 day ago",
+      progress: 75,
+      priority: "medium",
+    },
+    {
+      name: "Service Contract - ABC Corp",
+      status: "In Review", 
+      date: "2 days ago",
+      progress: 45,
+      priority: "high",
+    },
+    {
+      name: "Lease Agreement - Office Space",
+      status: "Draft",
+      date: "3 days ago",
+      progress: 20,
+      priority: "low",
+    },
+  ];
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'completed': return CheckCircle;
+      case 'pending': return Clock;
+      case 'uploaded': return FileText;
+      case 'shared': return Users;
+      default: return FileText;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Completed': return 'bg-blue-100 text-primary border-blue-200';
+      case 'Pending': return 'bg-blue-50 text-primary border-blue-100';
+      case 'In Review': return 'bg-blue-50 text-primary border-blue-100';
+      case 'Draft': return 'bg-slate-100 text-slate-600 border-slate-200';
+      default: return 'bg-slate-100 text-slate-600 border-slate-200';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'bg-primary';
+      case 'medium': return 'bg-blue-400';
+      case 'low': return 'bg-slate-400';
+      default: return 'bg-slate-400';
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          SignMeNow Dashboard
-        </h1>
-        <p className="text-muted-foreground">
-          Welcome back, {user?.firstName || user?.username}. Manage your
-          document signing workflow.
-        </p>
-      </div>
+    <PageWrapper
+      title={
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">👋</span>
+          <span>{`${getGreeting()}, Hedayat Farahi`}</span>
+        </div>
+      }
+      description="Manage your PDF signatures and documents"
+      actions={
+        <>
+          <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0">
+            <Crown className="h-4 w-4 mr-2" />
+            Upgrade to Pro
+          </Button>
+        </>
+      }
+    >
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <div
+          <StatsCard
             key={stat.title}
-            className="rounded-lg border bg-card text-card-foreground shadow-sm p-6"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                <stat.icon className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div className="flex items-center space-x-1">
-                {stat.trend === "up" ? (
-                  <ArrowUpRight className="h-4 w-4 text-green-600" />
-                ) : (
-                  <ArrowDownRight className="h-4 w-4 text-red-600" />
-                )}
-                <span className="text-sm font-medium text-green-600">
-                  {stat.change}
-                </span>
-              </div>
-            </div>
-            <div className="text-2xl font-bold mb-1">{stat.value}</div>
-            <div className="text-sm text-muted-foreground">{stat.title}</div>
-          </div>
+            title={stat.title}
+            value={stat.value}
+            icon={stat.icon}
+            change={stat.change}
+            trend={stat.trend}
+            color={stat.trend === 'up' ? 'blue' : 'slate'}
+          />
         ))}
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {/* Activity Feed */}
-        <div className="lg:col-span-2">
-          <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold">Recent Activity</h2>
-              <Clock className="h-4 w-4 text-muted-foreground" />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {/* Recent Activity */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-xl shadow-sm border border-blue-100 h-[480px] flex flex-col">
+              <div className="p-6 border-b border-blue-100 flex-shrink-0">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    Recent Activity
+                  </h3>
+                  <Button variant="outline" size="sm" className="border-blue-200 hover:bg-blue-50">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filter
+                  </Button>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 space-y-3">
+                {recentActivities.map((activity, index) => {
+                  const ActivityIcon = getActivityIcon(activity.type);
+                  return (
+                    <div
+                      key={index}
+                      className="flex items-start space-x-4 p-4 hover:bg-slate-50 rounded-lg transition-colors"
+                    >
+                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-primary text-sm font-medium flex-shrink-0">
+                        {activity.avatar}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-900 leading-relaxed">
+                          {activity.text}
+                        </p>
+                        <div className="flex items-center mt-2 text-xs text-slate-500">
+                          <ActivityIcon className="h-3 w-3 mr-1" />
+                          {activity.time}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-            <div className="space-y-4">
-              {activities.map((activity) => (
+          </div>
+
+          {/* Quick Actions */}
+          <div>
+            <div className="bg-white rounded-xl shadow-sm border border-blue-100 h-[480px] flex flex-col">
+              <div className="p-6 border-b border-blue-100 flex-shrink-0">
+                <h3 className="text-lg font-semibold text-slate-900">
+                  Quick Actions
+                </h3>
+              </div>
+              <div className="flex-1 p-6 space-y-3">
+                {quickActions.map((action) => (
+                  <button
+                    key={action.label}
+                    onClick={action.onClick}
+                    className="w-full flex items-center gap-4 p-4 hover:bg-blue-50 rounded-lg transition-colors text-left group"
+                  >
+                    <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center group-hover:bg-primary/90 transition-colors">
+                      <action.icon className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-slate-900">
+                        {action.label}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">
+                        {action.description}
+                      </div>
+                    </div>
+                    <div className="text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {action.shortcut}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* <div className="bg-white rounded-xl shadow-sm border border-slate-200">
+          <div className="p-6 border-b border-slate-200">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-900">
+                Recent Documents
+              </h3>
+              <Button className="bg-primary hover:bg-primary/90 text-white">
+                <Eye className="h-4 w-4 mr-2" />
+                View All
+              </Button>
+            </div>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {recentDocuments.map((doc, index) => (
                 <div
-                  key={activity.text}
-                  className="flex items-center space-x-4 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                  key={index}
+                  className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-all hover:-translate-y-1 group cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                    <activity.icon className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                      <FileText className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${getPriorityColor(doc.priority)}`}></div>
+                      <Eye className="h-4 w-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{activity.text}</p>
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {activity.time}
+                  <div className="space-y-3">
+                    <div>
+                      <h4 className="text-sm font-semibold text-slate-900 line-clamp-2">
+                        {doc.name}
+                      </h4>
+                      <p className="text-xs text-slate-500 mt-1">{doc.date}</p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className={`text-xs font-medium px-2 py-1 rounded-md border ${getStatusColor(doc.status)}`}>
+                          {doc.status}
+                        </span>
+                        <span className="text-xs text-slate-500">{doc.progress}%</span>
+                      </div>
+                      
+                      <div className="w-full bg-slate-200 rounded-full h-2">
+                        <div 
+                          className="h-full bg-blue-600 rounded-full transition-all duration-300"
+                          style={{ width: `${doc.progress}%` }}
+                        ></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-        </div>
+        </div> */}
 
-        {/* Quick Actions */}
-        <div>
-          <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold">Quick Actions</h2>
-              <Plus className="h-4 w-4 text-muted-foreground" />
+        {/* <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
+              <Shield className="h-6 w-6 text-white" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              {quickActions.map((action) => (
-                <div
-                  key={action.label}
-                  className="flex flex-col items-center p-4 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer group"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center mb-3 group-hover:bg-muted-foreground/10 transition-colors">
-                    <action.icon className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <span className="text-sm font-medium">{action.label}</span>
-                </div>
-              ))}
+            <div className="flex-1">
+              <h4 className="text-sm font-semibold text-blue-900">
+                Your documents are secure
+              </h4>
+              <p className="text-xs text-primary mt-1">
+                End-to-end encryption • SOC 2 compliant • 99.9% uptime
+              </p>
             </div>
+            <Button variant="outline" size="sm" className="border-blue-300 text-primary hover:bg-blue-100">
+              <Zap className="h-4 w-4 mr-2" />
+              Upgrade
+            </Button>
           </div>
-        </div>
-      </div>
-
-      {/* Recent Documents Section */}
-      <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold">Recent Documents</h2>
-          <FileText className="h-4 w-4 text-muted-foreground" />
-        </div>
-        <div className="space-y-4">
-          {[
-            {
-              name: "Employment Agreement - John Smith",
-              status: "Signed",
-              date: "2 hours ago",
-              icon: CheckCircle,
-            },
-            {
-              name: "NDA - TechCorp Partnership",
-              status: "Pending",
-              date: "1 day ago",
-              icon: Clock,
-            },
-            {
-              name: "Service Contract - ABC Corp",
-              status: "Draft",
-              date: "2 days ago",
-              icon: Edit,
-            },
-            {
-              name: "Lease Agreement - Office Space",
-              status: "Signed",
-              date: "3 days ago",
-              icon: CheckCircle,
-            },
-          ].map((doc) => (
-            <div
-              key={doc.name}
-              className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"
-            >
-              <div className="flex items-center space-x-4">
-                <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                  <doc.icon className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <div>
-                  <p className="font-medium">{doc.name}</p>
-                  <p className="text-sm text-muted-foreground">{doc.date}</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(
-                    doc.status
-                  )}`}
-                >
-                  {doc.status}
-                </span>
-                <Button variant="ghost" size="sm">
-                  <Eye className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+        </div> */}
+    </PageWrapper>
   );
 };
 

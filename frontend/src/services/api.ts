@@ -2,7 +2,7 @@
 // TODO: Re-enable backend integration when backend is ready. Replace the
 // mocked implementations below with real API calls to `API_BASE_URL`.
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export interface User {
   id: string;
@@ -140,7 +140,7 @@ class ApiService {
       id: "local-user",
       username: credentials.email.split("@")[0],
       email: credentials.email,
-      role: "user",
+      role: "Free",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     } as User;
@@ -148,6 +148,7 @@ class ApiService {
     const mockToken = "local-dev-token";
     this.token = mockToken;
     localStorage.setItem("token", mockToken);
+    localStorage.setItem("user", JSON.stringify(mockUser));
     this.setTokenExpiry();
 
     return { token: mockToken, user: mockUser };
@@ -166,7 +167,7 @@ class ApiService {
       email: userData.email,
       firstName: userData.firstName,
       lastName: userData.lastName,
-      role: "user",
+      role: "Free",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     } as User;
@@ -174,6 +175,7 @@ class ApiService {
     const mockToken = "local-dev-token";
     this.token = mockToken;
     localStorage.setItem("token", mockToken);
+    localStorage.setItem("user", JSON.stringify(mockUser));
     this.setTokenExpiry();
 
     return { token: mockToken, user: mockUser };
@@ -185,6 +187,7 @@ class ApiService {
     this.tokenExpiry = null;
     localStorage.removeItem("token");
     localStorage.removeItem("tokenExpiry");
+    localStorage.removeItem("user");
   }
 
   async getCurrentUser(): Promise<User> {
@@ -194,13 +197,23 @@ class ApiService {
       throw new ApiError("Not authenticated", 401);
     }
 
+    // Try to get stored user data first
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        return JSON.parse(storedUser);
+      } catch (e) {
+        // If parsing fails, fall back to mock user
+      }
+    }
+
     // Build a simple user from token (for local dev).
     const email = "local@dev";
     const mockUser: User = {
       id: "local-user",
       username: "local",
       email,
-      role: "user",
+      role: "Free",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     } as User;

@@ -60,18 +60,21 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
       const rect = canvas.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
       
+      // Set actual canvas size in memory (scaled for retina displays)
       canvas.width = rect.width * dpr;
       canvas.height = rect.height * dpr;
-      canvas.style.width = `${rect.width}px`;
-      canvas.style.height = `${rect.height}px`;
       
+      // Scale the drawing context so everything draws at the correct size
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.scale(dpr, dpr);
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
+        ctx.strokeStyle = selectedColor;
+        ctx.lineWidth = 2;
       }
       
+      // Initialize signature pad
       signaturePad.current = new SignaturePad(canvas, {
         backgroundColor: "rgba(255, 255, 255, 1)",
         penColor: selectedColor,
@@ -80,6 +83,8 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
         throttle: 8,
         minDistance: 1,
       });
+      
+      console.log('Signature pad initialized');
     }
   }, [method, isOpen, selectedColor]);
 
@@ -87,6 +92,7 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
     setMethod(newMethod);
     if (newMethod === 'draw' && signaturePad.current) {
       signaturePad.current.clear();
+      console.log('Signature pad cleared for draw method');
     }
   };
 
@@ -94,6 +100,7 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
     setSelectedColor(color);
     if (signaturePad.current) {
       signaturePad.current.penColor = color;
+      console.log('Signature pad color changed to:', color);
     }
   };
 
@@ -157,6 +164,7 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
     setUploadedImage(null);
     if (signaturePad.current) {
       signaturePad.current.clear();
+      console.log('Signature pad cleared on close');
     }
     onClose();
   };
@@ -199,8 +207,8 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
                   onClick={() => handleMethodChange(item.id as SignatureMethod)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
                     method === item.id
-                      ? 'bg-blue-50 border-blue-200 text-blue-700'
-                      : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                      ? 'bg-blue-50 border-blue-200 text-primary'
+                      : 'bg-white border-blue-100 text-primary hover:bg-blue-50'
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -292,12 +300,26 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
                 <div className="border border-gray-300 rounded-lg mt-2 bg-white">
                   <canvas
                     ref={signaturePadRef}
-                    className="w-full h-32 cursor-crosshair block"
+                    className="w-full h-40 cursor-crosshair block border border-gray-200"
                     style={{
                       touchAction: 'none',
-                      userSelect: 'none'
+                      userSelect: 'none',
+                      backgroundColor: 'white'
                     }}
                   />
+                </div>
+                <div className="flex justify-between items-center mt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => signaturePad.current?.clear()}
+                    className="text-xs"
+                  >
+                    Clear
+                  </Button>
+                  <span className="text-xs text-gray-500">
+                    {signaturePad.current && !signaturePad.current.isEmpty() ? 'Signature drawn' : 'Draw your signature above'}
+                  </span>
                 </div>
               </div>
               

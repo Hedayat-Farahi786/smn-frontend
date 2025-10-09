@@ -28,17 +28,17 @@ const LandingPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/90 border-blue-200">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <FileSignature className="h-4 w-4 text-primary-foreground" />
+              <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center shadow-lg">
+                <FileSignature className="h-4 w-4 text-white" />
               </div>
-              <span className="text-xl font-bold">SignMeNow</span>
+              <span className="text-xl font-bold text-slate-900">SignMeNow</span>
             </div>
 
             {/* Desktop Navigation */}
@@ -60,7 +60,7 @@ const LandingPage: React.FC = () => {
               <Button variant="ghost" onClick={() => navigate("/login")}>
                 Sign In
               </Button>
-              <Button onClick={() => navigate("/register")}>
+              <Button onClick={() => navigate("/register")} className="bg-primary hover:bg-primary/90 text-white shadow-lg">
                 Get Started
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -122,7 +122,7 @@ const LandingPage: React.FC = () => {
           <div className="text-center max-w-4xl mx-auto">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
               Sign Smart,{" "}
-              <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
                 Manage Smarter
               </span>
             </h1>
@@ -132,7 +132,7 @@ const LandingPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
                 size="lg"
-                className="text-lg px-8 py-6"
+                className="text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-white shadow-lg"
                 onClick={() => navigate("/register")}
               >
                 Get Started
@@ -170,7 +170,7 @@ const LandingPage: React.FC = () => {
                 className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
               >
                 <CardContent className="p-6">
-                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-blue-200 transition-colors">
                     <feature.icon className="h-6 w-6 text-primary" />
                   </div>
                   <h3 className="text-xl font-semibold mb-2">
@@ -186,7 +186,7 @@ const LandingPage: React.FC = () => {
 
 
       {/* CTA Section */}
-      <section className="py-20 bg-primary text-primary-foreground">
+      <section className="py-20 bg-primary text-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">
             Ready to Get Started?
@@ -207,7 +207,7 @@ const LandingPage: React.FC = () => {
             <Button
               size="lg"
               variant="outline"
-              className="text-lg px-8 py-6 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
+              className="text-lg px-8 py-6 border-white text-white hover:bg-white hover:text-primary"
               onClick={() => navigate("/login")}
             >
               Sign In
@@ -222,7 +222,7 @@ const LandingPage: React.FC = () => {
           <div className="text-center">
             <div className="flex items-center justify-center space-x-2 mb-4">
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <FileSignature className="h-4 w-4 text-primary-foreground" />
+                <FileSignature className="h-4 w-4 text-white" />
               </div>
               <span className="text-xl font-bold">SignMeNow</span>
             </div>

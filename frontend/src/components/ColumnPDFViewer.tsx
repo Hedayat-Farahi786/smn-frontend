@@ -53,13 +53,14 @@ interface ColumnPDFViewerProps {
   onLoadSuccess: (data: { numPages: number }) => void;
   onLoadError: (error: Error) => void;
   onPageImageRendered: (page: number, imageDataUrl: string, dimensions: { width: number; height: number }) => void;
-  onImageClick: (event: React.MouseEvent<HTMLImageElement>, pageNumber: number, imageDimensions: { width: number; height: number }) => void;
+  onImageClick: (event: React.MouseEvent<HTMLImageElement>, pageNumber: number, imageDimensions: { width: number; height: number }, imageElement: HTMLImageElement) => void;
   signatures: SignaturePosition[];
   textAnnotations: TextAnnotation[];
   formFields: FormField[];
   selectedElementId: string | null;
   onSignatureClick: (signatureId: string) => void;
   onTextClick: (textId: string) => void;
+  onTextDoubleClick: (textId: string) => void;
   onFormFieldClick: (fieldId: string) => void;
   onSignatureMove: (signatureId: string, x: number, y: number) => void;
   onTextMove: (textId: string, x: number, y: number) => void;
@@ -87,6 +88,7 @@ const ColumnPDFViewer: React.FC<ColumnPDFViewerProps> = ({
   selectedElementId,
   onSignatureClick,
   onTextClick,
+  onTextDoubleClick,
   onFormFieldClick,
   onSignatureMove,
   onTextMove,
@@ -104,7 +106,6 @@ const ColumnPDFViewer: React.FC<ColumnPDFViewerProps> = ({
   const [imageRefs, setImageRefs] = useState<Record<number, React.RefObject<HTMLImageElement | null>>>({});
 
   const handleAllPagesRendered = useCallback((pageImages: Record<number, PageImageData>) => {
-    console.log('handleAllPagesRendered called with:', pageImages);
     setAllPageImages(pageImages);
     
     // Create refs for each page image (PDF pages + blank pages)
@@ -122,7 +123,6 @@ const ColumnPDFViewer: React.FC<ColumnPDFViewerProps> = ({
       }
     });
     
-    console.log('Created refs:', refs);
     setImageRefs(refs);
   }, [blankPages]);
 
@@ -147,8 +147,8 @@ const ColumnPDFViewer: React.FC<ColumnPDFViewerProps> = ({
     }
   }, [blankPages, allPageImages]);
 
-  const handleImageClick = useCallback((event: React.MouseEvent<HTMLImageElement>, pageNumber: number, imageDimensions: { width: number; height: number }) => {
-    onImageClick(event, pageNumber, imageDimensions);
+  const handleImageClick = useCallback((event: React.MouseEvent<HTMLImageElement>, pageNumber: number, imageDimensions: { width: number; height: number }, imageElement: HTMLImageElement) => {
+    onImageClick(event, pageNumber, imageDimensions, imageElement);
   }, [onImageClick]);
 
   return (
@@ -160,89 +160,31 @@ const ColumnPDFViewer: React.FC<ColumnPDFViewerProps> = ({
         onLoadSuccess={onLoadSuccess}
         onLoadError={onLoadError}
         onPageImageRendered={onPageImageRendered}
-        onImageClick={handleImageClick}
         showAllPages={true}
         onAllPagesRendered={handleAllPagesRendered}
         onAddBlankPage={onAddBlankPage}
         blankPages={blankPages}
         imageRefs={imageRefs}
+        onImageClick={handleImageClick}
+        signatures={signatures}
+        textAnnotations={textAnnotations}
+        formFields={formFields}
+        selectedElementId={selectedElementId}
+        onSignatureClick={onSignatureClick}
+        onTextClick={onTextClick}
+        onTextDoubleClick={onTextDoubleClick}
+        onFormFieldClick={onFormFieldClick}
+        onSignatureMove={onSignatureMove}
+        onTextMove={onTextMove}
+        onFormFieldMove={onFormFieldMove}
+        onSignatureResize={onSignatureResize}
+        onTextResize={onTextResize}
+        onFormFieldResize={onFormFieldResize}
+        onDeleteElement={onDeleteElement}
+        currentTool={currentTool}
         className=""
       />
-      
-      {/* Render overlays for each page */}
-      {Object.entries(allPageImages).map(([pageNumStr, pageData]) => {
-        const pageNum = parseInt(pageNumStr);
-        const imageRef = imageRefs[pageNum];
-        
-        if (!imageRef) {
-          console.log(`No image ref for page ${pageNum}`);
-          return null;
-        }
-        
-        console.log(`Rendering overlay for page ${pageNum}, ref:`, imageRef);
-        
-        return (
-          <div key={`overlay-container-${pageNum}`} className="relative">
-            <EnhancedPDFOverlay
-              imageRef={imageRef}
-              imageDimensions={pageData.dimensions}
-              signatures={signatures.filter(sig => sig.pageNumber === pageNum)}
-              textAnnotations={textAnnotations.filter(text => text.pageNumber === pageNum)}
-              formFields={formFields.filter(field => field.pageNumber === pageNum)}
-              selectedElementId={selectedElementId}
-              onSignatureClick={onSignatureClick}
-              onTextClick={onTextClick}
-              onFormFieldClick={onFormFieldClick}
-              onSignatureMove={onSignatureMove}
-              onTextMove={onTextMove}
-              onFormFieldMove={onFormFieldMove}
-              onSignatureResize={onSignatureResize}
-              onTextResize={onTextResize}
-              onFormFieldResize={onFormFieldResize}
-              onImageClick={handleImageClick}
-              onDeleteElement={onDeleteElement}
-              currentTool={currentTool}
-              currentPage={pageNum}
-              className="absolute inset-0 pointer-events-auto"
-            />
-          </div>
-        );
-      })}
 
-      {/* Render overlays for blank pages */}
-      {Object.entries(blankPages).map(([pageNumStr, dimensions]) => {
-        const pageNum = parseInt(pageNumStr);
-        const imageRef = imageRefs[pageNum];
-
-        if (!imageRef) return null;
-        
-        return (
-          <div key={`blank-overlay-container-${pageNum}`} className="relative">
-            <EnhancedPDFOverlay
-              imageRef={imageRef}
-              imageDimensions={dimensions}
-              signatures={signatures.filter(sig => sig.pageNumber === pageNum)}
-              textAnnotations={textAnnotations.filter(text => text.pageNumber === pageNum)}
-              formFields={formFields.filter(field => field.pageNumber === pageNum)}
-              selectedElementId={selectedElementId}
-              onSignatureClick={onSignatureClick}
-              onTextClick={onTextClick}
-              onFormFieldClick={onFormFieldClick}
-              onSignatureMove={onSignatureMove}
-              onTextMove={onTextMove}
-              onFormFieldMove={onFormFieldMove}
-              onSignatureResize={onSignatureResize}
-              onTextResize={onTextResize}
-              onFormFieldResize={onFormFieldResize}
-              onImageClick={handleImageClick}
-              onDeleteElement={onDeleteElement}
-              currentTool={currentTool}
-              currentPage={pageNum}
-              className="absolute inset-0 pointer-events-auto"
-            />
-          </div>
-        );
-      })}
     </div>
   );
 };

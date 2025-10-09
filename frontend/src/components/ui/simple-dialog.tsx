@@ -66,7 +66,7 @@ const DialogContent: React.FC<DialogContentProps> = ({
   return (
     <div
       className={cn(
-        "bg-white rounded-lg shadow-lg border max-w-lg w-full mx-4 p-6",
+        "bg-white rounded-lg shadow-lg border-blue-100 border max-w-lg w-full mx-4 p-6",
         className
       )}
       {...props}

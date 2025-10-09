@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useCallback, useState } from "react";
+import { getImageDisplayInfo, screenToImageCoords, imageToScreenCoords, imageToScreenDimensions } from "../utils/coordinateUtils";
 
 interface SignatureCanvasOverlayProps {
   imageRef: React.RefObject<HTMLImageElement | null>;
@@ -42,44 +43,14 @@ const SignatureCanvasOverlay: React.FC<SignatureCanvasOverlayProps> = ({
   const signatureImageCache = useRef<Map<string, HTMLImageElement>>(new Map());
 
   // Calculate the actual displayed image dimensions and position
-  const getImageDisplayInfo = useCallback(() => {
+  const getDisplayInfo = useCallback(() => {
     if (!imageRef.current) return null;
-    
-    const img = imageRef.current;
-    const rect = img.getBoundingClientRect();
-    
-    // Calculate the actual displayed size (considering object-fit: contain)
-    const imgAspectRatio = imageDimensions.width / imageDimensions.height;
-    const containerAspectRatio = rect.width / rect.height;
-    
-    let displayWidth, displayHeight, offsetX, offsetY;
-    
-    if (imgAspectRatio > containerAspectRatio) {
-      // Image is wider than container
-      displayWidth = rect.width;
-      displayHeight = rect.width / imgAspectRatio;
-      offsetX = 0;
-      offsetY = (rect.height - displayHeight) / 2;
-    } else {
-      // Image is taller than container
-      displayHeight = rect.height;
-      displayWidth = rect.height * imgAspectRatio;
-      offsetX = (rect.width - displayWidth) / 2;
-      offsetY = 0;
-    }
-    
-    return {
-      displayWidth,
-      displayHeight,
-      offsetX,
-      offsetY,
-      rect
-    };
+    return getImageDisplayInfo(imageRef.current, imageDimensions);
   }, [imageRef, imageDimensions]);
 
   // Convert screen coordinates to image coordinates
   const screenToImageCoords = useCallback((screenX: number, screenY: number) => {
-    const displayInfo = getImageDisplayInfo();
+    const displayInfo = getDisplayInfo();
     if (!displayInfo) return { x: 0, y: 0 };
     
     const { displayWidth, displayHeight, offsetX, offsetY, rect } = displayInfo;
@@ -93,11 +64,11 @@ const SignatureCanvasOverlay: React.FC<SignatureCanvasOverlayProps> = ({
     const imageY = relativeY * imageDimensions.height;
     
     return { x: imageX, y: imageY };
-  }, [getImageDisplayInfo, imageDimensions]);
+  }, [getDisplayInfo, imageDimensions]);
 
   // Convert image coordinates to screen coordinates
   const imageToScreenCoords = useCallback((imageX: number, imageY: number) => {
-    const displayInfo = getImageDisplayInfo();
+    const displayInfo = getDisplayInfo();
     if (!displayInfo) return { x: 0, y: 0 };
     
     const { displayWidth, displayHeight, offsetX, offsetY, rect } = displayInfo;
@@ -111,11 +82,11 @@ const SignatureCanvasOverlay: React.FC<SignatureCanvasOverlayProps> = ({
     const screenY = rect.top + offsetY + (relativeY * displayHeight);
     
     return { x: screenX, y: screenY };
-  }, [getImageDisplayInfo, imageDimensions]);
+  }, [getDisplayInfo, imageDimensions]);
 
   // Convert image dimensions to screen dimensions
   const imageToScreenDimensions = useCallback((imageWidth: number, imageHeight: number) => {
-    const displayInfo = getImageDisplayInfo();
+    const displayInfo = getDisplayInfo();
     if (!displayInfo) return { width: 0, height: 0 };
     
     const { displayWidth, displayHeight } = displayInfo;
@@ -127,7 +98,7 @@ const SignatureCanvasOverlay: React.FC<SignatureCanvasOverlayProps> = ({
       width: relativeWidth * displayWidth,
       height: relativeHeight * displayHeight
     };
-  }, [getImageDisplayInfo, imageDimensions]);
+  }, [getDisplayInfo, imageDimensions]);
 
   // Update canvas size and redraw
   const updateCanvas = useCallback(() => {
@@ -155,7 +126,7 @@ const SignatureCanvasOverlay: React.FC<SignatureCanvasOverlayProps> = ({
       
       const screenPos = imageToScreenCoords(signature.x, signature.y);
       const screenDims = imageToScreenDimensions(signature.width, signature.height);
-      const displayInfo = getImageDisplayInfo();
+      const displayInfo = getDisplayInfo();
       
       if (!displayInfo) return;
       
@@ -184,7 +155,7 @@ const SignatureCanvasOverlay: React.FC<SignatureCanvasOverlayProps> = ({
         ctx.drawImage(signatureImg, canvasX, canvasY, screenDims.width, screenDims.height);
       }
     });
-  }, [signatures, selectedSignatureId, imageToScreenCoords, imageToScreenDimensions, getImageDisplayInfo, imageRef]);
+  }, [signatures, selectedSignatureId, imageToScreenCoords, imageToScreenDimensions, getDisplayInfo, imageRef]);
 
   // Handle mouse events
   const handleMouseDown = useCallback((e: React.MouseEvent) => {

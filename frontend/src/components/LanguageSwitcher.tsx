@@ -31,7 +31,11 @@ const LanguageSwitcher: React.FC = () => {
             onClick={() => changeLanguage(language.code)}
             className={currentLanguage === language.code ? "bg-accent" : ""}
           >
-            <span className="mr-2">{language.flag}</span>
+            <img 
+              src={language.flagUrl} 
+              alt={`${language.name} flag`}
+              className="h-4 w-6 mr-2 object-cover rounded-sm"
+            />
             {language.name}
           </DropdownMenuItem>
         ))}

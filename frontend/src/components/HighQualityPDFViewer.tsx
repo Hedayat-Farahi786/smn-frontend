@@ -1,6 +1,46 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { configurePDFJS } from "../utils/pdfjsConfig";
 import SimplePDFViewerFallback from "./SimplePDFViewerFallback";
+import EnhancedPDFOverlay from "./EnhancedPDFOverlay";
+
+interface SignaturePosition {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  pageNumber: number;
+  signatureData: string;
+}
+
+interface TextAnnotation {
+  id: string;
+  x: number;
+  y: number;
+  text: string;
+  style: {
+    fontSize: number;
+    fontFamily: string;
+    fontWeight: 'normal' | 'bold';
+    fontStyle: 'normal' | 'italic';
+    textDecoration: 'none' | 'underline';
+    color: string;
+    textAlign: 'left' | 'center' | 'right';
+  };
+  pageNumber: number;
+}
+
+interface FormField {
+  id: string;
+  x: number;
+  y: number;
+  type: 'checkbox' | 'textfield' | 'signature';
+  label: string;
+  required: boolean;
+  size: 'small' | 'medium' | 'large';
+  pageNumber: number;
+  value?: any;
+}
 
 interface HighQualityPDFViewerProps {
   file: string; // URL or blob URL
@@ -11,13 +51,29 @@ interface HighQualityPDFViewerProps {
   onPageChange?: (page: number) => void;
   className?: string;
   onPageImageRendered?: (page: number, imageDataUrl: string, dimensions: { width: number; height: number }) => void;
-  onImageClick?: (event: React.MouseEvent<HTMLImageElement>, pageNumber: number, imageDimensions: { width: number; height: number }) => void;
+  onImageClick?: (event: React.MouseEvent<HTMLImageElement>, pageNumber: number, imageDimensions: { width: number; height: number }, imageElement: HTMLImageElement) => void;
   imageRef?: React.RefObject<HTMLImageElement | null>;
   showAllPages?: boolean; // New prop to show all pages in column
   onAllPagesRendered?: (pageImages: Record<number, PageImageData>) => void;
   onAddBlankPage?: (insertAfterPage: number) => void;
   blankPages?: Record<number, { width: number; height: number }>;
   imageRefs?: Record<number, React.RefObject<HTMLImageElement | null>>;
+  signatures?: SignaturePosition[];
+  textAnnotations?: TextAnnotation[];
+  formFields?: FormField[];
+  selectedElementId?: string | null;
+  onSignatureClick?: (signatureId: string) => void;
+  onTextClick?: (textId: string) => void;
+  onTextDoubleClick?: (textId: string) => void;
+  onFormFieldClick?: (fieldId: string) => void;
+  onSignatureMove?: (signatureId: string, x: number, y: number) => void;
+  onTextMove?: (textId: string, x: number, y: number) => void;
+  onFormFieldMove?: (fieldId: string, x: number, y: number) => void;
+  onSignatureResize?: (signatureId: string, x: number, y: number, width: number, height: number) => void;
+  onTextResize?: (textId: string, x: number, y: number, width: number, height: number) => void;
+  onFormFieldResize?: (fieldId: string, x: number, y: number, width: number, height: number) => void;
+  onDeleteElement?: (elementId: string, type: 'signature' | 'text' | 'form') => void;
+  currentTool?: string;
 }
 
 interface PageImageData {
@@ -42,6 +98,22 @@ const HighQualityPDFViewer: React.FC<HighQualityPDFViewerProps> = ({
   onAddBlankPage,
   blankPages = {},
   imageRefs = {},
+  signatures = [],
+  textAnnotations = [],
+  formFields = [],
+  selectedElementId,
+  onSignatureClick,
+  onTextClick,
+  onTextDoubleClick,
+  onFormFieldClick,
+  onSignatureMove,
+  onTextMove,
+  onFormFieldMove,
+  onSignatureResize,
+  onTextResize,
+  onFormFieldResize,
+  onDeleteElement,
+  currentTool,
 }) => {
   const [pdfDoc, setPdfDoc] = useState<any | null>(null);
   const [numPages, setNumPages] = useState<number>(0);
@@ -268,9 +340,12 @@ const HighQualityPDFViewer: React.FC<HighQualityPDFViewerProps> = ({
   const handleImageClick = useCallback((event: React.MouseEvent<HTMLImageElement>, pageNumber: number) => {
     const imageData = pageImages[pageNumber];
     if (imageData && onImageClick) {
-      onImageClick(event, pageNumber, imageData.dimensions);
+      const imageElement = imageRefs[pageNumber]?.current;
+      if (imageElement) {
+        onImageClick(event, pageNumber, imageData.dimensions, imageElement);
+      }
     }
-  }, [pageImages, onImageClick]);
+  }, [pageImages, onImageClick, imageRefs]);
 
   if (!file) return null;
 
@@ -300,7 +375,7 @@ const HighQualityPDFViewer: React.FC<HighQualityPDFViewerProps> = ({
           </div>
           <div className="w-48 bg-gray-200 rounded-full h-2 mt-2">
             <div 
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+              className="bg-primary h-2 rounded-full transition-all duration-300" 
               style={{ width: `${renderingProgress}%` }}
             />
           </div>
@@ -365,18 +440,13 @@ const HighQualityPDFViewer: React.FC<HighQualityPDFViewerProps> = ({
                 {isBlankPage ? (
                   // Blank page - white rectangle
                   <div 
-                    className="bg-white border-2 border-dashed border-gray-300 cursor-crosshair flex items-center justify-center"
+                    ref={imageRefs[pageNum]}
+                    className="bg-white border-2 border-dashed border-gray-300 flex items-center justify-center"
                     style={{
                       width: '100%',
                       height: `${(isBlankPage.height / isBlankPage.width) * 600}px`,
                       maxWidth: '600px',
                       margin: '0 auto'
-                    }}
-                    onClick={(e) => {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      const x = ((e.clientX - rect.left) / rect.width) * isBlankPage.width;
-                      const y = ((e.clientY - rect.top) / rect.height) * isBlankPage.height;
-                      onImageClick?.(e as any, pageNum, isBlankPage);
                     }}
                   >
                     <div className="text-gray-400 text-sm">Blank Page - Click to add elements</div>
@@ -388,14 +458,13 @@ const HighQualityPDFViewer: React.FC<HighQualityPDFViewerProps> = ({
                       ref={imageRefs[pageNum]}
                       src={pageImages[pageNum].dataUrl} 
                       alt={`Page ${pageNum}`} 
-                      className="block w-full h-auto cursor-crosshair"
-                      onClick={(e) => handleImageClick(e, pageNum)}
+                      className="block w-full h-auto"
                       style={{
                         maxWidth: '100%',
                         height: 'auto'
                       }}
                       onLoad={() => {
-                        console.log(`Image loaded for page ${pageNum}, ref:`, imageRefs[pageNum]);
+                        // Image loaded successfully
                       }}
                     />
                   ) : (
@@ -403,6 +472,55 @@ const HighQualityPDFViewer: React.FC<HighQualityPDFViewerProps> = ({
                       <div className="text-sm text-gray-500">Loading page {pageNum}...</div>
                     </div>
                   )
+                )}
+                
+                {/* Overlay for this page */}
+                {imageRefs[pageNum] && (isBlankPage || pageImages[pageNum]) && (
+                  <EnhancedPDFOverlay
+                    imageRef={imageRefs[pageNum]}
+                    imageDimensions={isBlankPage || pageImages[pageNum]?.dimensions}
+                    signatures={signatures.filter(sig => sig.pageNumber === pageNum)}
+                    textAnnotations={textAnnotations.filter(text => text.pageNumber === pageNum)}
+                    formFields={formFields.filter(field => field.pageNumber === pageNum)}
+                    selectedElementId={selectedElementId}
+                    onSignatureClick={onSignatureClick}
+                    onTextClick={onTextClick}
+                    onTextDoubleClick={onTextDoubleClick}
+                    onFormFieldClick={onFormFieldClick}
+                    onSignatureMove={onSignatureMove}
+                    onTextMove={onTextMove}
+                    onFormFieldMove={onFormFieldMove}
+                    onSignatureResize={onSignatureResize}
+                    onTextResize={onTextResize}
+                    onFormFieldResize={onFormFieldResize}
+                    onDeleteElement={onDeleteElement}
+                    currentTool={currentTool}
+                    currentPage={pageNum}
+                    className="absolute inset-0"
+                  />
+                )}
+                
+                {/* Invisible click handler for element placement */}
+                {(currentTool === 'signature' || currentTool === 'text') && (
+                  <div 
+                    className="absolute inset-0 cursor-crosshair"
+                    style={{ zIndex: 1001 }}
+                    onClick={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const imageElement = imageRefs[pageNum]?.current;
+                      if (imageElement) {
+                        const mockEvent = {
+                          ...e,
+                          clientX: e.clientX,
+                          clientY: e.clientY
+                        } as React.MouseEvent<HTMLImageElement>;
+                        const dimensions = isBlankPage || pageImages[pageNum]?.dimensions;
+                        if (dimensions) {
+                          onImageClick?.(mockEvent, pageNum, dimensions, imageElement);
+                        }
+                      }
+                    }}
+                  />
                 )}
               </div>
             </div>

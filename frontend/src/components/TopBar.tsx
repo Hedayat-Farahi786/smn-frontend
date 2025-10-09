@@ -60,13 +60,13 @@ const TopBar: React.FC = () => {
   );
 
   return (
-    <div className="h-16 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+    <div className="h-16 bg-white dark:bg-slate-800 border-b border-blue-100 dark:border-blue-800 shadow-sm">
       <div className="flex items-center justify-between h-full px-6">
         {/* Left side - Date and Time */}
         <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <Calendar className="h-4 w-4" />
-            <span className="font-medium">{formatDate(currentTime)}</span>
+          <div className="flex items-center space-x-2 text-sm text-primary dark:text-blue-400">
+            <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <span className="font-medium text-black">{formatDate(currentTime)}</span>
           </div>
           {/* <div className="flex items-center space-x-2 text-sm text-muted-foreground">
             <Clock className="h-4 w-4" />
@@ -79,9 +79,13 @@ const TopBar: React.FC = () => {
         {/* Right side - Theme and Language selectors */}
         <div className="flex items-center space-x-3">
           {/* Theme Switcher */}
-          <DropdownMenu>
+          {/* <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-9 w-9 p-0 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-primary dark:text-blue-400 hover:text-primary dark:hover:text-blue-300"
+              >
                 {actualTheme === "dark" ? (
                   <Moon className="h-4 w-4" />
                 ) : (
@@ -90,12 +94,12 @@ const TopBar: React.FC = () => {
                 <span className="sr-only">Toggle theme</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuContent align="end" className="w-40 border-blue-100">
               <DropdownMenuItem
                 onClick={() => setTheme("light")}
-                className="flex items-center space-x-2"
+                className="flex items-center space-x-2 hover:bg-blue-50"
               >
-                <Sun className="h-4 w-4" />
+                <Sun className="h-4 w-4 text-blue-600" />
                 <span>Light</span>
                 {theme === "light" && (
                   <span className="ml-auto text-primary">✓</span>
@@ -103,9 +107,9 @@ const TopBar: React.FC = () => {
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => setTheme("dark")}
-                className="flex items-center space-x-2"
+                className="flex items-center space-x-2 hover:bg-blue-50"
               >
-                <Moon className="h-4 w-4" />
+                <Moon className="h-4 w-4 text-blue-600" />
                 <span>Dark</span>
                 {theme === "dark" && (
                   <span className="ml-auto text-primary">✓</span>
@@ -114,36 +118,48 @@ const TopBar: React.FC = () => {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => setTheme("system")}
-                className="flex items-center space-x-2"
+                className="flex items-center space-x-2 hover:bg-blue-50"
               >
-                <Monitor className="h-4 w-4" />
+                <Monitor className="h-4 w-4 text-blue-600" />
                 <span>System</span>
                 {theme === "system" && (
                   <span className="ml-auto text-primary">✓</span>
                 )}
               </DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu> */}
 
           {/* Language Selector */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-9 px-3">
-                <Globe className="h-4 w-4 mr-2" />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-9 px-3 hover:bg-blue-50"
+              >
+                <img 
+                  src={currentLang?.flagUrl} 
+                  alt={`${currentLang?.name} flag`}
+                  className="h-4 w-6 mr-2 object-cover rounded-sm"
+                />
                 <span className="text-sm font-medium">
-                  {currentLang?.flag} {currentLang?.name}
+                  {currentLang?.name}
                 </span>
-                <ChevronDown className="h-3 w-3 ml-1" />
+                <ChevronDown className="h-3 w-3 ml-1 text-blue-600" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end" className="w-48 border-blue-100">
               {availableLanguages.map((lang) => (
                 <DropdownMenuItem
                   key={lang.code}
                   onClick={() => changeLanguage(lang.code)}
-                  className="flex items-center space-x-2"
+                  className="flex items-center space-x-2 hover:bg-blue-50"
                 >
-                  <span className="text-lg">{lang.flag}</span>
+                  <img 
+                    src={lang.flagUrl} 
+                    alt={`${lang.name} flag`}
+                    className="h-4 w-6 object-cover rounded-sm"
+                  />
                   <span>{lang.name}</span>
                   {currentLanguage === lang.code && (
                     <span className="ml-auto text-primary">✓</span>

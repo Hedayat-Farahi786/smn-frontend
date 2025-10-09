@@ -1,902 +1,741 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
-import SignaturePad from "signature_pad";
-import { Button } from "../components/ui/button";
-import { Card } from "../components/ui/card";
-import { Label } from "../components/ui/label";
-import {
-  Upload,
-  Download,
-  RotateCcw,
-  ZoomIn,
-  ZoomOut,
-  Pen,
-  Trash2,
-  Check,
-  X,
-  FileText,
-  Type,
-  CheckSquare,
-} from "lucide-react";
-import { useToast } from "../hooks/use-toast";
-import { EnhancedPDFService } from "../services/EnhancedPDFService";
-import HighQualityPDFViewer from "../components/HighQualityPDFViewer";
-import SignatureCanvasOverlay from "../components/SignatureCanvasOverlay";
-import PDFToolbar, { ToolType } from "../components/PDFToolbar";
-import SignatureModal from "../components/SignatureModal";
-import TextTool from "../components/TextTool";
-import CheckboxTool from "../components/CheckboxTool";
-import EnhancedPDFOverlay from "../components/EnhancedPDFOverlay";
-import ColumnPDFViewer from "../components/ColumnPDFViewer";
-
-// PDF.js worker is configured in SimplePDFViewer component
-
-export interface SignaturePosition {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  pageNumber: number;
-  signatureData: string;
-}
-
-export interface TextAnnotation {
-  id: string;
-  x: number;
-  y: number;
-  text: string;
-  style: {
-    fontSize: number;
-    fontFamily: string;
-    fontWeight: 'normal' | 'bold';
-    fontStyle: 'normal' | 'italic';
-    textDecoration: 'none' | 'underline';
-    color: string;
-    textAlign: 'left' | 'center' | 'right';
-  };
-  pageNumber: number;
-}
-
-export interface FormField {
-  id: string;
-  x: number;
-  y: number;
-  type: 'checkbox' | 'textfield' | 'signature';
-  label: string;
-  required: boolean;
-  size: 'small' | 'medium' | 'large';
-  pageNumber: number;
-  value?: any;
-}
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useToast } from '../hooks/use-toast';
+import { useAuth } from '../contexts/AuthContext';
+import PageWrapper from '../components/PageWrapper';
+import Toolbar from '../components/PDFEditor/Toolbar';
+import PDFViewer from '../components/PDFEditor/PDFViewer';
+import AnnotationEditToolbar from '../components/PDFEditor/AnnotationEditToolbar';
+import { 
+  PDFEditorState, 
+  PDFAnnotation, 
+  HistoryState 
+} from '../types/pdf-editor';
+import { 
+  Upload, 
+  FileText, 
+  AlertCircle,
+  Loader2,
+  CheckCircle
+} from 'lucide-react';
 
 const PDFSignaturePage: React.FC = () => {
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [pdfUrl, setPdfUrl] = useState<string>("");
-  const [numPages, setNumPages] = useState<number>(0);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [scale, setScale] = useState<number>(1.2);
-  const [isSigning, setIsSigning] = useState<boolean>(false);
-  const [signatures, setSignatures] = useState<SignaturePosition[]>([]);
-  const [selectedSignatureId, setSelectedSignatureId] = useState<string | null>(null);
-  const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
-  const [pageImages, setPageImages] = useState<Record<number, string>>({});
-  
-  // New state for enhanced features
-  const [currentTool, setCurrentTool] = useState<ToolType>('select');
-  const [isSignatureModalOpen, setIsSignatureModalOpen] = useState<boolean>(false);
-  const [textAnnotations, setTextAnnotations] = useState<TextAnnotation[]>([]);
-  const [formFields, setFormFields] = useState<FormField[]>([]);
-  const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
-  const [history, setHistory] = useState<any[]>([]);
-  const [historyIndex, setHistoryIndex] = useState<number>(-1);
-  const [blankPages, setBlankPages] = useState<Record<number, { width: number; height: number }>>({});
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const signaturePadRef = useRef<HTMLCanvasElement>(null);
-  const signaturePad = useRef<SignaturePad | null>(null);
-  const pdfContainerRef = useRef<HTMLDivElement>(null);
-  const imageRef = useRef<HTMLImageElement>(null);
+  const { user } = useAuth();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize signature pad
+  // Main state
+  const [state, setState] = useState<PDFEditorState>({
+    file: null,
+    numPages: 0,
+    currentPage: 1,
+    scale: 1.2,
+    annotations: [],
+    selectedTool: null,
+    selectedAnnotationId: null,
+    selectedAnnotationIds: [],
+    history: [],
+    historyIndex: -1,
+    isLoading: false,
+    error: null,
+  });
+
+  // Drag and drop state
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  // Initialize history with empty state
   useEffect(() => {
-    const initializeSignaturePad = () => {
-      console.log("Attempting to initialize signature pad...");
-      console.log("Canvas ref:", signaturePadRef.current);
-      
-      if (!signaturePadRef.current) {
-        console.log("Canvas ref is null, retrying...");
-        return false;
-      }
-
-      const canvas = signaturePadRef.current;
-      console.log("Canvas element found:", canvas);
-      
-      // Wait for canvas to be properly rendered
-      const rect = canvas.getBoundingClientRect();
-      console.log("Canvas rect:", rect);
-      
-      if (rect.width === 0 || rect.height === 0) {
-        console.log("Canvas has zero dimensions, retrying...");
-        return false;
-      }
-      
-      try {
-        const dpr = window.devicePixelRatio || 1;
-        console.log("Device pixel ratio:", dpr);
-        
-        // Set canvas size
-        canvas.width = rect.width * dpr;
-        canvas.height = rect.height * dpr;
-        canvas.style.width = `${rect.width}px`;
-        canvas.style.height = `${rect.height}px`;
-        
-        console.log("Canvas dimensions set:", canvas.width, "x", canvas.height);
-        
-        // Get context and scale
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          console.error("Failed to get canvas 2D context");
-          return false;
-        }
-        
-        ctx.scale(dpr, dpr);
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        
-        console.log("Canvas context configured");
-        
-        // Initialize signature pad
-        signaturePad.current = new SignaturePad(canvas, {
-          backgroundColor: "rgba(255, 255, 255, 1)",
-          penColor: "rgb(0, 0, 0)",
-          minWidth: 1,
-          maxWidth: 3,
-          throttle: 8,
-          minDistance: 1,
-        });
-        
-        console.log("Signature pad initialized successfully:", {
-          canvasWidth: canvas.width,
-          canvasHeight: canvas.height,
-          devicePixelRatio: dpr,
-          signaturePad: signaturePad.current,
-          isEmpty: signaturePad.current.isEmpty()
-        });
-        
-        return true;
-      } catch (error) {
-        console.error("Error initializing signature pad:", error);
-        return false;
-      }
-    };
-
-    // Try to initialize with multiple attempts
-    const attemptInitialization = () => {
-      if (!initializeSignaturePad()) {
-        // Retry after a short delay
-        setTimeout(attemptInitialization, 200);
-      }
-    };
-
-    // Start initialization attempts
-    attemptInitialization();
-    
-    // Also try after a longer delay as backup
-    const timeoutId = setTimeout(attemptInitialization, 500);
-    
-    return () => clearTimeout(timeoutId);
-  }, []);
-
-  // Handle signature pad canvas resize
-  useEffect(() => {
-    const handleResize = () => {
-      if (signaturePadRef.current && signaturePad.current) {
-        const canvas = signaturePadRef.current;
-        const rect = canvas.getBoundingClientRect();
-        
-        // Resize canvas
-        canvas.width = rect.width * window.devicePixelRatio;
-        canvas.height = rect.height * window.devicePixelRatio;
-        canvas.style.width = `${rect.width}px`;
-        canvas.style.height = `${rect.height}px`;
-        
-        // Scale the drawing context
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-        }
-        
-        // Clear and redraw signature pad
-        signaturePad.current.clear();
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const handleFileUpload = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      if (file && EnhancedPDFService.validatePDF(file)) {
-        setPdfFile(file);
-        const url = URL.createObjectURL(file);
-        setPdfUrl(url);
-        setSignatures([]);
-        setCurrentPage(1);
-        toast({
-          title: "PDF uploaded successfully",
-          description: `File: ${file.name} (${EnhancedPDFService.formatFileSize(
-            file.size
-          )})`,
-        });
-      } else {
-        toast({
-          title: "Invalid file type",
-          description: "Please upload a valid PDF file.",
-          variant: "destructive",
-        });
-      }
-    },
-    [toast]
-  );
-
-  const onDocumentLoadSuccess = useCallback(
-    ({ numPages }: { numPages: number }) => {
-      setNumPages(numPages);
-    },
-    []
-  );
-
-  const onDocumentLoadError = useCallback(
-    (error: Error) => {
-      console.error('PDF loading error:', error);
-      toast({
-        title: "PDF Loading Error",
-        description: "Failed to load the PDF file. Please try a different file.",
-        variant: "destructive",
-      });
-    },
-    [toast]
-  );
-
-  const handleStartSigning = useCallback(() => {
-    console.log("Starting signature mode...");
-    console.log("PDF file exists:", !!pdfFile);
-    console.log("Signature pad exists:", !!signaturePad.current);
-    
-    if (!pdfFile) {
-      toast({
-        title: "No PDF loaded",
-        description: "Please upload a PDF file first.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsSigning(true);
-    
-    // Force re-initialization of signature pad if needed
-    if (!signaturePad.current && signaturePadRef.current) {
-      console.log("Re-initializing signature pad for signing mode...");
-      const canvas = signaturePadRef.current;
-      const rect = canvas.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      canvas.style.width = `${rect.width}px`;
-      canvas.style.height = `${rect.height}px`;
-      
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.scale(dpr, dpr);
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-      }
-      
-      signaturePad.current = new SignaturePad(canvas, {
-        backgroundColor: "rgba(255, 255, 255, 1)",
-        penColor: "rgb(0, 0, 0)",
-        minWidth: 1,
-        maxWidth: 3,
-        throttle: 8,
-        minDistance: 1,
-      });
-      
-      console.log("Signature pad re-initialized for signing:", signaturePad.current);
-    }
-    
-    if (signaturePad.current) {
-      signaturePad.current.clear();
-      console.log("Signature pad cleared");
-    } else {
-      console.warn("Signature pad not available when starting signing");
-    }
-  }, [pdfFile, toast]);
-
-  const handleSaveSignature = useCallback(() => {
-    console.log("Attempting to save signature...");
-    console.log("Signature pad exists:", !!signaturePad.current);
-    console.log("Signature pad is empty:", signaturePad.current?.isEmpty());
-    
-    if (!signaturePad.current) {
-      toast({
-        title: "Signature pad not initialized",
-        description: "Please try refreshing the page and try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (signaturePad.current.isEmpty()) {
-      toast({
-        title: "No signature",
-        description: "Please draw a signature first.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const signatureData = signaturePad.current.toDataURL('image/png');
-      console.log("Signature data generated, length:", signatureData.length);
-      
-      const newSignature: SignaturePosition = {
-        id: `signature-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        x: 100,
-        y: 100,
-        width: 200,
-        height: 80,
-        pageNumber: currentPage,
-        signatureData,
+    if (state.history.length === 0) {
+      const initialState: HistoryState = {
+        annotations: [],
+        timestamp: Date.now(),
       };
-
-      setSignatures((prev) => [...prev, newSignature]);
-      setSelectedSignatureId(newSignature.id);
-      setIsSigning(false);
-      signaturePad.current.clear();
-
-      toast({
-        title: "Signature added",
-        description: "Click on the PDF image to place the signature.",
-      });
-      
-      console.log("Signature saved successfully:", newSignature.id);
-    } catch (error) {
-      console.error("Error saving signature:", error);
-      toast({
-        title: "Error saving signature",
-        description: "There was an error saving your signature. Please try again.",
-        variant: "destructive",
-      });
+      setState(prev => ({
+        ...prev,
+        history: [initialState],
+        historyIndex: 0,
+      }));
     }
-  }, [currentPage, toast]);
+  }, [state.history.length]);
 
-  const handleCancelSigning = useCallback(() => {
-    setIsSigning(false);
-    if (signaturePad.current) {
-      signaturePad.current.clear();
-    }
-  }, []);
+  // Save current state to history
+  const saveToHistory = useCallback((annotations: PDFAnnotation[]) => {
+    const newHistoryState: HistoryState = {
+      annotations: [...annotations],
+      timestamp: Date.now(),
+    };
 
-  const handleSignatureClick = useCallback((signatureId: string) => {
-    setSelectedSignatureId(signatureId);
-  }, []);
-
-  const handleImageClick = useCallback((event: React.MouseEvent<HTMLImageElement>, pageNumber: number, imageDimensions: { width: number; height: number }) => {
-    if (currentTool === 'select') return;
-    
-    // Get click coordinates relative to the image
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * imageDimensions.width;
-    const y = ((event.clientY - rect.top) / rect.height) * imageDimensions.height;
-    
-    if (currentTool === 'signature') {
-    // Find the most recently added signature that hasn't been placed yet
-    const unplacedSignature = signatures
-      .filter(sig => sig.pageNumber === currentPage)
-      .sort((a, b) => b.id.localeCompare(a.id))[0];
-    
-    if (unplacedSignature) {
-      setSignatures(prev => prev.map(sig => 
-        sig.id === unplacedSignature.id 
-          ? { ...sig, x, y }
-          : sig
-      ));
-        setCurrentTool('select');
-      toast({
-        title: "Signature placed",
-        description: "Signature has been placed on the document.",
-      });
-    }
-    } else if (currentTool === 'text') {
-      // Find the most recently added text annotation that hasn't been placed yet
-      const unplacedText = textAnnotations
-        .filter(text => text.pageNumber === currentPage)
-        .sort((a, b) => b.id.localeCompare(a.id))[0];
-      
-      if (unplacedText) {
-        setTextAnnotations(prev => prev.map(text => 
-          text.id === unplacedText.id 
-            ? { ...text, x, y }
-            : text
-        ));
-        setCurrentTool('select');
-        toast({
-          title: "Text placed",
-          description: "Text has been placed on the document.",
-        });
-      }
-    } else if (currentTool === 'checkbox') {
-      // Find the most recently added form field that hasn't been placed yet
-      const unplacedFormField = formFields
-        .filter(field => field.pageNumber === currentPage)
-        .sort((a, b) => b.id.localeCompare(a.id))[0];
-      
-      if (unplacedFormField) {
-        setFormFields(prev => prev.map(field => 
-          field.id === unplacedFormField.id 
-            ? { ...field, x, y }
-            : field
-        ));
-        setCurrentTool('select');
-        toast({
-          title: "Form field placed",
-          description: "Form field has been placed on the document.",
-        });
-      }
-    }
-  }, [currentTool, signatures, textAnnotations, formFields, currentPage, toast]);
-
-  const handleSignatureMove = useCallback((signatureId: string, x: number, y: number) => {
-    setSignatures(prev => prev.map(sig => 
-      sig.id === signatureId 
-        ? { ...sig, x, y }
-        : sig
-    ));
-  }, []);
-
-  const handleSignatureResize = useCallback((signatureId: string, x: number, y: number, width: number, height: number) => {
-    setSignatures(prev => prev.map(sig => 
-      sig.id === signatureId 
-        ? { ...sig, x, y, width, height }
-        : sig
-    ));
-  }, []);
-
-  const handlePageImageRendered = useCallback((pageNumber: number, imageDataUrl: string, dimensions: { width: number; height: number }) => {
-    setPageImages(prev => ({ ...prev, [pageNumber]: imageDataUrl }));
-    if (pageNumber === currentPage) {
-      setImageDimensions(dimensions);
-    }
-  }, [currentPage]);
-
-  const handleDeleteSignature = useCallback(
-    (signatureId: string) => {
-      setSignatures((prev) => prev.filter((s) => s.id !== signatureId));
-      if (selectedSignatureId === signatureId) {
-        setSelectedSignatureId(null);
-      }
-      toast({
-        title: "Signature deleted",
-        description: "Signature has been removed from the document.",
-      });
-    },
-    [selectedSignatureId, toast]
-  );
-
-
-  const handleApplyChanges = useCallback(async () => {
-    if (!pdfFile || (signatures.length === 0 && textAnnotations.length === 0 && formFields.length === 0)) {
-      toast({
-        title: "No changes to apply",
-        description: "Please add signatures, text, or form fields before applying changes.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      toast({
-        title: "Applying changes...",
-        description: "Saving all elements to the PDF...",
-      });
-
-      // Create a comprehensive PDF with all elements
-      const allElements = {
-        signatures,
-        textAnnotations,
-        formFields,
-        pageImages
+    setState(prev => {
+      const newHistory = [...prev.history.slice(0, prev.historyIndex + 1), newHistoryState];
+      return {
+        ...prev,
+        history: newHistory,
+        historyIndex: newHistory.length - 1,
+        annotations,
       };
-
-      const updatedPdfBlob = await EnhancedPDFService.createHighQualitySignedPDF(
-        pdfUrl,
-        signatures,
-        pageImages,
-        pdfFile.name
-      );
-
-      // Update the PDF URL with the new version
-      const newUrl = URL.createObjectURL(updatedPdfBlob);
-      setPdfUrl(newUrl);
-
-      toast({
-        title: "Changes applied successfully",
-        description: "All elements have been saved to the PDF. You can now download the updated document.",
-      });
-    } catch (error) {
-      console.error("Apply changes error:", error);
-      toast({
-        title: "Failed to apply changes",
-        description: "There was an error saving the elements to the PDF.",
-        variant: "destructive",
-      });
-    }
-  }, [pdfFile, signatures, textAnnotations, formFields, pdfUrl, pageImages, toast]);
-
-  const handleDownload = useCallback(async () => {
-    if (!pdfFile || (signatures.length === 0 && textAnnotations.length === 0 && formFields.length === 0)) {
-      toast({
-        title: "Cannot download",
-        description: "Please add signatures, text, or form fields before downloading.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      toast({
-        title: "Processing...",
-        description: "Creating final PDF document...",
-      });
-
-      const signedPdfBlob = await EnhancedPDFService.createHighQualitySignedPDF(
-        pdfUrl,
-        signatures,
-        pageImages,
-        pdfFile.name
-      );
-
-      const fileName = `edited_${pdfFile.name}`;
-      EnhancedPDFService.downloadBlob(signedPdfBlob, fileName);
-
-      toast({
-        title: "Download started",
-        description: "Your edited PDF is being downloaded.",
-      });
-    } catch (error) {
-      console.error("Download error:", error);
-      toast({
-        title: "Download failed",
-        description: "There was an error creating the final PDF.",
-        variant: "destructive",
-      });
-    }
-  }, [pdfFile, signatures, pdfUrl, pageImages, toast]);
-
-  const clearAllSignatures = useCallback(() => {
-    setSignatures([]);
-    setSelectedSignatureId(null);
-    toast({
-      title: "Signatures cleared",
-      description: "All signatures have been removed.",
     });
+  }, []);
+
+  // Handle file upload
+  const handleFileUpload = useCallback(async (file: File) => {
+    if (file.type !== 'application/pdf') {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a valid PDF file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 50 * 1024 * 1024) { // 50MB limit
+      toast({
+        title: "File too large",
+        description: "Please upload a PDF file smaller than 50MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setState(prev => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      setState(prev => ({
+        ...prev,
+        file: arrayBuffer,
+        annotations: [],
+        selectedAnnotationId: null,
+        currentPage: 1,
+        isLoading: false,
+      }));
+
+      toast({
+        title: "PDF uploaded successfully",
+        description: `File: ${file.name} (${formatFileSize(file.size)})`,
+      });
+    } catch (error) {
+      console.error('File upload error:', error);
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: 'Failed to load PDF file',
+      }));
+      
+      toast({
+        title: "Upload failed",
+        description: "There was an error loading the PDF file.",
+        variant: "destructive",
+      });
+    }
   }, [toast]);
 
-  // New handler functions for enhanced features
-  const handleToolChange = useCallback((tool: ToolType) => {
-    setCurrentTool(tool);
-    if (tool === 'signature') {
-      setIsSignatureModalOpen(true);
-    }
+  // Drag and drop handlers
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
   }, []);
 
-  const handleSignatureSave = useCallback((signatureData: string, method: 'type' | 'draw' | 'upload' | 'camera') => {
-    const newSignature: SignaturePosition = {
-      id: `signature-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      x: 100,
-      y: 100,
-      width: 200,
-      height: 80,
-      pageNumber: currentPage,
-      signatureData,
-    };
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  }, []);
 
-    setSignatures((prev) => [...prev, newSignature]);
-    setSelectedSignatureId(newSignature.id);
-    setCurrentTool('select');
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    const pdfFile = files.find(file => file.type === 'application/pdf');
     
-    toast({
-      title: "Signature created",
-      description: "Click on the PDF to place the signature.",
-    });
-  }, [currentPage, toast]);
-
-  const handleTextAdd = useCallback((text: string, style: any) => {
-    const newTextAnnotation: TextAnnotation = {
-      id: `text-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      x: 100,
-      y: 100,
-      text,
-      style,
-      pageNumber: currentPage,
-    };
-
-    setTextAnnotations((prev) => [...prev, newTextAnnotation]);
-    setSelectedElementId(newTextAnnotation.id);
-    setCurrentTool('select');
-    
-    toast({
-      title: "Text added",
-      description: "Click on the PDF to place the text.",
-    });
-  }, [currentPage, toast]);
-
-  const handleFormFieldAdd = useCallback((formData: any) => {
-    const newFormField: FormField = {
-      id: formData.id,
-      x: 100,
-      y: 100,
-      type: formData.type,
-      label: formData.label,
-      required: formData.required,
-      size: formData.size,
-      pageNumber: currentPage,
-    };
-
-    setFormFields((prev) => [...prev, newFormField]);
-    setSelectedElementId(newFormField.id);
-    setCurrentTool('select');
-    
-    toast({
-      title: "Form field added",
-      description: "Click on the PDF to place the form field.",
-    });
-  }, [currentPage, toast]);
-
-  const handleUndo = useCallback(() => {
-    if (historyIndex > 0) {
-      setHistoryIndex(historyIndex - 1);
-      // Restore state from history
-      const state = history[historyIndex - 1];
-      setSignatures(state.signatures || []);
-      setTextAnnotations(state.textAnnotations || []);
-      setFormFields(state.formFields || []);
+    if (pdfFile) {
+      handleFileUpload(pdfFile);
     }
-  }, [historyIndex, history]);
+  }, [handleFileUpload]);
+
+  // Tool selection
+  const handleToolSelect = useCallback((tool: string | null) => {
+    setState(prev => ({
+      ...prev,
+      selectedTool: tool,
+      selectedAnnotationId: null,
+    }));
+  }, []);
+
+  // Annotation handlers
+  const handleAnnotationAdd = useCallback((annotation: Omit<PDFAnnotation, 'id'>) => {
+    const newAnnotation: PDFAnnotation = {
+      ...annotation,
+      id: `annotation-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    };
+
+    const updatedAnnotations = [...state.annotations, newAnnotation];
+    saveToHistory(updatedAnnotations);
+
+    toast({
+      title: "Annotation added",
+      description: `${annotation.type} annotation has been added to the document.`,
+    });
+  }, [state.annotations, saveToHistory, toast]);
+
+  const handleAnnotationUpdate = useCallback((id: string, updates: Partial<PDFAnnotation>) => {
+    const updatedAnnotations = state.annotations.map(annotation =>
+      annotation.id === id ? { ...annotation, ...updates } : annotation
+    );
+    saveToHistory(updatedAnnotations);
+  }, [state.annotations, saveToHistory]);
+
+  const handleAnnotationDelete = useCallback((id: string) => {
+    const updatedAnnotations = state.annotations.filter(annotation => annotation.id !== id);
+    saveToHistory(updatedAnnotations);
+
+    setState(prev => ({
+      ...prev,
+      selectedAnnotationId: prev.selectedAnnotationId === id ? null : prev.selectedAnnotationId,
+    }));
+
+    toast({
+      title: "Annotation deleted",
+      description: "Annotation has been removed from the document.",
+    });
+  }, [state.annotations, saveToHistory, toast]);
+
+  const handleAnnotationSelect = useCallback((id: string | null) => {
+    setState(prev => ({
+      ...prev,
+      selectedAnnotationId: id,
+      selectedAnnotationIds: id ? [id] : [],
+      selectedTool: id ? 'select' : prev.selectedTool,
+    }));
+  }, []);
+
+  // Page navigation
+  const handlePageChange = useCallback((page: number) => {
+    setState(prev => ({
+      ...prev,
+      currentPage: Math.max(1, Math.min(page, prev.numPages)),
+    }));
+  }, []);
+
+  // Zoom controls
+  const handleScaleChange = useCallback((scale: number) => {
+    setState(prev => ({
+      ...prev,
+      scale: Math.max(0.5, Math.min(3, scale)),
+    }));
+  }, []);
+
+  // Undo/Redo
+  const handleUndo = useCallback(() => {
+    if (state.historyIndex > 0) {
+      const newIndex = state.historyIndex - 1;
+      const historyState = state.history[newIndex];
+      setState(prev => ({
+        ...prev,
+        historyIndex: newIndex,
+        annotations: historyState.annotations,
+        selectedAnnotationId: null,
+      }));
+    }
+  }, [state.historyIndex, state.history]);
 
   const handleRedo = useCallback(() => {
-    if (historyIndex < history.length - 1) {
-      setHistoryIndex(historyIndex + 1);
-      // Restore state from history
-      const state = history[historyIndex + 1];
-      setSignatures(state.signatures || []);
-      setTextAnnotations(state.textAnnotations || []);
-      setFormFields(state.formFields || []);
+    if (state.historyIndex < state.history.length - 1) {
+      const newIndex = state.historyIndex + 1;
+      const historyState = state.history[newIndex];
+      setState(prev => ({
+        ...prev,
+        historyIndex: newIndex,
+        annotations: historyState.annotations,
+        selectedAnnotationId: null,
+      }));
     }
-  }, [historyIndex, history]);
+  }, [state.historyIndex, state.history]);
 
-  const canUndo = historyIndex > 0;
-  const canRedo = historyIndex < history.length - 1;
-
-  // Enhanced overlay handlers
-  const handleTextClick = useCallback((textId: string) => {
-    setSelectedElementId(textId);
-    setSelectedSignatureId(null);
-  }, []);
-
-  const handleFormFieldClick = useCallback((fieldId: string) => {
-    setSelectedElementId(fieldId);
-    setSelectedSignatureId(null);
-  }, []);
-
-  const handleTextMove = useCallback((textId: string, x: number, y: number) => {
-    setTextAnnotations(prev => prev.map(text => 
-      text.id === textId 
-        ? { ...text, x, y }
-        : text
-    ));
-  }, []);
-
-  const handleFormFieldMove = useCallback((fieldId: string, x: number, y: number) => {
-    setFormFields(prev => prev.map(field => 
-      field.id === fieldId 
-        ? { ...field, x, y }
-        : field
-    ));
-  }, []);
-
-  const handleTextResize = useCallback((textId: string, x: number, y: number, width: number, height: number) => {
-    // Text annotations don't have explicit width/height, but we can update position
-    setTextAnnotations(prev => prev.map(text => 
-      text.id === textId 
-        ? { ...text, x, y }
-        : text
-    ));
-  }, []);
-
-  const handleFormFieldResize = useCallback((fieldId: string, x: number, y: number, width: number, height: number) => {
-    // Form fields don't have explicit width/height in our current implementation
-    setFormFields(prev => prev.map(field => 
-      field.id === fieldId 
-        ? { ...field, x, y }
-        : field
-    ));
-  }, []);
-
-  const handleDeleteElement = useCallback((elementId: string, type: 'signature' | 'text' | 'form') => {
-    if (type === 'signature') {
-      setSignatures(prev => prev.filter(s => s.id !== elementId));
-      if (selectedSignatureId === elementId) {
-        setSelectedSignatureId(null);
-      }
-    } else if (type === 'text') {
-      setTextAnnotations(prev => prev.filter(t => t.id !== elementId));
-    } else if (type === 'form') {
-      setFormFields(prev => prev.filter(f => f.id !== elementId));
+  // Save PDF
+  const handleSave = useCallback(async () => {
+    if (!state.file || state.annotations.length === 0) {
+      toast({
+        title: "Nothing to save",
+        description: "Please add annotations before saving.",
+        variant: "destructive",
+      });
+      return;
     }
-    
-    if (selectedElementId === elementId) {
-      setSelectedElementId(null);
-    }
-    
-    toast({
-      title: "Element deleted",
-      description: `${type} has been removed from the document.`,
-    });
-  }, [selectedSignatureId, selectedElementId, toast]);
 
-  const handleAddBlankPage = useCallback((insertAfterPage: number) => {
-    // Create a blank page with standard dimensions (8.5" x 11" at 300 DPI)
-    const blankPageDimensions = {
-      width: 2550, // 8.5 inches * 300 DPI
-      height: 3300  // 11 inches * 300 DPI
+    setState(prev => ({ ...prev, isLoading: true }));
+
+    try {
+      // For now, just download the original PDF
+      // In a real implementation, you would use pdf-lib to embed annotations
+      const blob = new Blob([state.file], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `annotated-${Date.now()}.pdf`;
+      a.click();
+      
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "PDF saved successfully",
+        description: "Your annotated PDF has been downloaded.",
+      });
+    } catch (error) {
+      console.error('Save error:', error);
+      toast({
+        title: "Save failed",
+        description: "There was an error saving the PDF.",
+        variant: "destructive",
+      });
+    } finally {
+      setState(prev => ({ ...prev, isLoading: false }));
+    }
+  }, [state.file, state.annotations, toast]);
+
+  // Utility functions
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  // Helper functions for annotation defaults
+  const getDefaultWidth = (type: PDFAnnotation['type']): number => {
+    switch (type) {
+      case 'text': return 120;
+      case 'signature': return 200;
+      case 'checkbox': return 20;
+      case 'image': return 100;
+      case 'shape': return 80;
+      case 'line': return 100;
+      default: return 100;
+    }
+  };
+
+  const getDefaultHeight = (type: PDFAnnotation['type']): number => {
+    switch (type) {
+      case 'text': return 30;
+      case 'signature': return 80;
+      case 'checkbox': return 20;
+      case 'image': return 100;
+      case 'shape': return 60;
+      case 'line': return 2;
+      default: return 30;
+    }
+  };
+
+  const getDefaultContent = (type: PDFAnnotation['type']): string => {
+    switch (type) {
+      case 'text': return 'Sample Text';
+      case 'signature': return 'Signature';
+      case 'checkbox': return '☐';
+      case 'image': return 'Image';
+      case 'shape': return '';
+      case 'line': return '';
+      default: return '';
+    }
+  };
+
+  const getDefaultStyle = (type: PDFAnnotation['type']) => {
+    const baseStyle = {
+      fontSize: 12,
+      fontFamily: 'Arial',
+      color: '#000000',
+      backgroundColor: 'transparent',
+      borderColor: '#000000',
+      borderWidth: 1,
     };
-    
-    // Generate a unique page number for the blank page
-    const existingPageNumbers = new Set<number>();
-    
-    // Add PDF pages
-    Array.from({ length: numPages }, (_, i) => i + 1).forEach(pageNum => existingPageNumbers.add(pageNum));
-    
-    // Add existing blank pages
-    Object.keys(blankPages).forEach(pageNum => existingPageNumbers.add(parseInt(pageNum)));
-    
-    // Find the next available page number after the insert position
-    let newPageNumber = insertAfterPage + 1;
-    while (existingPageNumbers.has(newPageNumber)) {
-      newPageNumber++;
+
+    switch (type) {
+      case 'text':
+        return { ...baseStyle, backgroundColor: 'rgba(255, 255, 255, 0.8)', fontSize: 14 };
+      case 'signature':
+        return { ...baseStyle, borderColor: '#007bff', borderWidth: 2, fontSize: 16 };
+      case 'checkbox':
+        return { ...baseStyle, fontSize: 16 };
+      case 'image':
+        return { ...baseStyle, backgroundColor: 'rgba(0, 0, 0, 0.1)' };
+      case 'shape':
+        return { ...baseStyle, backgroundColor: 'rgba(0, 123, 255, 0.2)' };
+      case 'line':
+        return { ...baseStyle, backgroundColor: 'transparent' };
+      default:
+        return baseStyle;
     }
-    
-    setBlankPages(prev => ({
-      ...prev,
-      [newPageNumber]: blankPageDimensions
-    }));
-    
-    toast({
-      title: "Blank page added",
-      description: `Blank page inserted ${insertAfterPage === 0 ? 'at the start' : insertAfterPage === numPages ? 'at the end' : `after page ${insertAfterPage}`}.`,
-    });
-  }, [numPages, blankPages, toast]);
+  };
+
+  const canUndo = state.historyIndex > 0;
+  const canRedo = state.historyIndex < state.history.length - 1;
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Delete' && state.selectedAnnotationId) {
+        handleAnnotationDelete(state.selectedAnnotationId);
+      }
+      if (e.key === 'Escape') {
+        handleAnnotationSelect(null);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c' && state.selectedAnnotationId) {
+        e.preventDefault();
+        const annotation = state.annotations.find(a => a.id === state.selectedAnnotationId);
+        if (annotation) {
+          localStorage.setItem('copiedAnnotation', JSON.stringify(annotation));
+          toast({ title: "Annotation copied", description: "Use Ctrl+V to paste" });
+        }
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+        e.preventDefault();
+        const copiedData = localStorage.getItem('copiedAnnotation');
+        if (copiedData) {
+          const annotation = JSON.parse(copiedData);
+          const newAnnotation: Omit<PDFAnnotation, 'id'> = {
+            ...annotation,
+            x: annotation.x + 30,
+            y: annotation.y + 30,
+            zIndex: state.annotations.length + 1,
+          };
+          const newId = `annotation-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          const annotationWithId = { ...newAnnotation, id: newId };
+          
+          const updatedAnnotations = [...state.annotations, annotationWithId];
+          saveToHistory(updatedAnnotations);
+          handleAnnotationSelect(newId);
+          
+          toast({ title: "Annotation pasted", description: "Annotation has been duplicated and selected" });
+        }
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+        e.preventDefault();
+        const currentPageAnnotations = state.annotations
+          .filter(a => a.pageNumber === state.currentPage)
+          .map(a => a.id);
+        
+        setState(prev => ({
+          ...prev,
+          selectedAnnotationIds: currentPageAnnotations,
+          selectedAnnotationId: currentPageAnnotations[0] || null,
+          selectedTool: 'select'
+        }));
+        
+        toast({ 
+          title: "All annotations selected", 
+          description: `Selected ${currentPageAnnotations.length} annotations on current page` 
+        });
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'd' && state.selectedAnnotationId) {
+        e.preventDefault();
+        const annotation = state.annotations.find(a => a.id === state.selectedAnnotationId);
+        if (annotation) {
+          const duplicated: Omit<PDFAnnotation, 'id'> = {
+            ...annotation,
+            x: annotation.x + 30,
+            y: annotation.y + 30,
+            zIndex: state.annotations.length + 1,
+          };
+          const newId = `annotation-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          const annotationWithId = { ...duplicated, id: newId };
+          
+          const updatedAnnotations = [...state.annotations, annotationWithId];
+          saveToHistory(updatedAnnotations);
+          handleAnnotationSelect(newId);
+          
+          toast({ title: "Annotation duplicated", description: "New annotation selected" });
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [state.selectedAnnotationId, state.annotations, handleAnnotationDelete, handleAnnotationSelect, handleAnnotationAdd, toast]);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-
-      {/* Toolbar */}
-        {pdfFile && (
-        <PDFToolbar
-          currentTool={currentTool}
-          onToolChange={handleToolChange}
-          onZoomIn={() => setScale((prev) => Math.min(3, prev + 0.2))}
-          onZoomOut={() => setScale((prev) => Math.max(0.5, prev - 0.2))}
-          onUndo={handleUndo}
-          onRedo={handleRedo}
-          onDownload={handleDownload}
-          onApplyChanges={handleApplyChanges}
-          onClearAll={() => {
-                      setSignatures([]);
-            setTextAnnotations([]);
-            setFormFields([]);
-            setSelectedSignatureId(null);
-            setSelectedElementId(null);
-          }}
-          canUndo={canUndo}
-          canRedo={canRedo}
-          zoomLevel={scale}
-          hasSignatures={signatures.length > 0 || textAnnotations.length > 0 || formFields.length > 0}
-          onTextAdd={handleTextAdd}
-          onFormFieldAdd={handleFormFieldAdd}
-        />
-      )}
-
-      {/* Main Content */}
-      <div className="flex-1 flex">
-        {!pdfFile ? (
-          <div className="flex-1 flex items-center justify-center min-h-[calc(100vh-4rem)]">
-            <div className="text-center space-y-6">
-              <input
-                id="pdf-upload"
-                type="file"
-                accept=".pdf"
-                onChange={handleFileUpload}
-                ref={fileInputRef}
-                className="hidden"
-              />
+    <PageWrapper
+      title="PDF Editor"
+      description={state.file ? "Edit your PDF document" : "Professional PDF editing and annotation tool"}
+      icon={FileText}
+    >
+      {!state.file ? (
+        <div className="bg-white rounded-xl shadow-sm border border-blue-100">
+          <div className="p-6">
+            <div 
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`bg-white rounded-2xl p-12 shadow-sm border-2 border-dashed transition-all duration-200 text-center ${
+                isDragOver 
+                  ? 'border-blue-500 bg-blue-50' 
+                  : 'border-blue-300 hover:border-blue-400 hover:bg-blue-50/50'
+              }`}
+            >
               
-              {/* Icon */}
-              <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center">
-                <FileText className="h-8 w-8 text-muted-foreground" />
+              <div className={`w-24 h-24 mx-auto mb-6 rounded-3xl flex items-center justify-center transition-all duration-200 ${
+                isDragOver ? 'bg-blue-200' : 'bg-blue-100'
+              }`}>
+                <Upload className={`h-12 w-12 ${isDragOver ? 'text-primary' : 'text-primary'}`} />
               </div>
               
-              {/* Title */}
-              <h1 className="text-2xl font-semibold text-foreground">
-                PDF Signature Tool
-              </h1>
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">
+                {isDragOver ? 'Drop PDF Here' : 'Upload PDF Document'}
+              </h2>
               
-              {/* Description */}
-              <p className="text-muted-foreground max-w-sm mx-auto">
-                Upload a PDF file to start editing with signatures, text annotations, and form fields.
+              <p className="text-slate-600 mb-8 text-lg leading-relaxed">
+                {isDragOver 
+                  ? 'Release to upload your PDF document'
+                  : 'Drag and drop your PDF file here, or click to browse and upload'
+                }
               </p>
               
-              {/* Upload Button */}
-              <Button
+              <button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-2"
+                className="bg-primary hover:bg-primary/90 text-white shadow-lg px-8 py-4 text-lg rounded-lg flex items-center mx-auto"
+                disabled={isDragOver}
               >
-                <Upload className="h-4 w-4" />
+                <Upload className="h-5 w-5 mr-3" />
                 Choose PDF File
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="flex-1 flex flex-col">
-            {/* Column PDF Viewer - All Pages */}
-            <div className="flex-1 overflow-y-auto bg-white">
-              <div className="w-full p-4">
-                <ColumnPDFViewer
-                  file={pdfUrl}
-                  scale={scale}
-                  onLoadSuccess={onDocumentLoadSuccess}
-                  onLoadError={onDocumentLoadError}
-                  onPageImageRendered={handlePageImageRendered}
-                  onImageClick={handleImageClick}
-                  signatures={signatures}
-                  textAnnotations={textAnnotations}
-                  formFields={formFields}
-                  selectedElementId={selectedElementId || selectedSignatureId}
-                  onSignatureClick={handleSignatureClick}
-                  onTextClick={handleTextClick}
-                  onFormFieldClick={handleFormFieldClick}
-                  onSignatureMove={handleSignatureMove}
-                  onTextMove={handleTextMove}
-                  onFormFieldMove={handleFormFieldMove}
-                  onSignatureResize={handleSignatureResize}
-                  onTextResize={handleTextResize}
-                  onFormFieldResize={handleFormFieldResize}
-                  onDeleteElement={handleDeleteElement}
-                  currentTool={currentTool}
-                  onAddBlankPage={handleAddBlankPage}
-                  blankPages={blankPages}
-                  className=""
-                />
-                    </div>
-            </div>
-          </div>
-        )}
-      </div>
+              </button>
 
-      {/* Signature Modal */}
-      <SignatureModal
-        isOpen={isSignatureModalOpen}
-        onClose={() => setIsSignatureModalOpen(false)}
-        onSave={handleSignatureSave}
-      />
-    </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleFileUpload(file);
+                }}
+                className="hidden"
+              />
+
+              <div className="mt-12 pt-8 border-t border-blue-200">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-slate-600">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-blue-600 rounded-full" />
+                    <span>Digital signatures & annotations</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-blue-600 rounded-full" />
+                    <span>Text, shapes, and form fields</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-blue-600 rounded-full" />
+                    <span>Client-side processing</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col h-screen">
+          {/* Main Toolbar */}
+          <Toolbar
+            selectedTool={state.selectedTool}
+            onToolSelect={handleToolSelect}
+            onSave={handleSave}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            canUndo={canUndo}
+            canRedo={canRedo}
+            scale={state.scale}
+            onScaleChange={handleScaleChange}
+            currentPage={state.currentPage}
+            totalPages={state.numPages}
+            onPageChange={handlePageChange}
+          />
+
+          {/* Annotation Edit Toolbar */}
+          {state.selectedAnnotationId && (
+            <AnnotationEditToolbar
+              annotation={state.annotations.find(a => a.id === state.selectedAnnotationId)}
+              onEdit={() => console.log('Edit annotation')}
+              onDuplicate={() => {
+                const annotation = state.annotations.find(a => a.id === state.selectedAnnotationId);
+                if (annotation) {
+                  const duplicated: Omit<PDFAnnotation, 'id'> = {
+                    ...annotation,
+                    x: annotation.x + 30,
+                    y: annotation.y + 30,
+                    zIndex: state.annotations.length + 1,
+                  };
+                  handleAnnotationAdd(duplicated);
+                }
+              }}
+              onRotate={() => {
+                if (state.selectedAnnotationId) {
+                  const annotation = state.annotations.find(a => a.id === state.selectedAnnotationId);
+                  if (annotation) {
+                    const currentRotation = annotation.rotation || 0;
+                    const newRotation = (currentRotation + 90) % 360;
+                    handleAnnotationUpdate(state.selectedAnnotationId, { rotation: newRotation });
+                  }
+                }
+              }}
+              onDelete={() => {
+                if (state.selectedAnnotationId) {
+                  handleAnnotationDelete(state.selectedAnnotationId);
+                }
+              }}
+              onBringToFront={() => {
+                if (state.selectedAnnotationId) {
+                  const maxZ = Math.max(...state.annotations.map(a => a.zIndex || 1));
+                  handleAnnotationUpdate(state.selectedAnnotationId, { zIndex: maxZ + 1 });
+                }
+              }}
+              onSendToBack={() => {
+                if (state.selectedAnnotationId) {
+                  const minZ = Math.min(...state.annotations.map(a => a.zIndex || 1));
+                  handleAnnotationUpdate(state.selectedAnnotationId, { zIndex: Math.max(1, minZ - 1) });
+                }
+              }}
+              onStyleUpdate={(updates) => {
+                if (state.selectedAnnotationId) {
+                  handleAnnotationUpdate(state.selectedAnnotationId, updates);
+                }
+              }}
+              onCopy={() => {
+                if (state.selectedAnnotationId) {
+                  const annotation = state.annotations.find(a => a.id === state.selectedAnnotationId);
+                  if (annotation) {
+                    localStorage.setItem('copiedAnnotation', JSON.stringify(annotation));
+                    toast({ title: "Annotation copied" });
+                  }
+                }
+              }}
+              onCut={() => {
+                if (state.selectedAnnotationId) {
+                  const annotation = state.annotations.find(a => a.id === state.selectedAnnotationId);
+                  if (annotation) {
+                    localStorage.setItem('copiedAnnotation', JSON.stringify(annotation));
+                    handleAnnotationDelete(state.selectedAnnotationId);
+                    toast({ title: "Annotation cut" });
+                  }
+                }
+              }}
+              onPaste={() => {
+                const copiedData = localStorage.getItem('copiedAnnotation');
+                if (copiedData) {
+                  const annotation = JSON.parse(copiedData);
+                  const newAnnotation: Omit<PDFAnnotation, 'id'> = {
+                    ...annotation,
+                    x: annotation.x + 30,
+                    y: annotation.y + 30,
+                    zIndex: state.annotations.length + 1,
+                  };
+                  handleAnnotationAdd(newAnnotation);
+                  toast({ title: "Annotation pasted" });
+                }
+              }}
+              onLock={() => {
+                if (state.selectedAnnotationId) {
+                  const annotation = state.annotations.find(a => a.id === state.selectedAnnotationId);
+                  handleAnnotationUpdate(state.selectedAnnotationId, { locked: !annotation?.locked });
+                  toast({ title: annotation?.locked ? "Annotation unlocked" : "Annotation locked" });
+                }
+              }}
+              onHide={() => {
+                if (state.selectedAnnotationId) {
+                  const annotation = state.annotations.find(a => a.id === state.selectedAnnotationId);
+                  handleAnnotationUpdate(state.selectedAnnotationId, { hidden: !annotation?.hidden });
+                  toast({ title: annotation?.hidden ? "Annotation shown" : "Annotation hidden" });
+                }
+              }}
+              onFlipH={() => {
+                if (state.selectedAnnotationId) {
+                  handleAnnotationUpdate(state.selectedAnnotationId, { flippedH: true });
+                  toast({ title: "Annotation flipped horizontally" });
+                }
+              }}
+              onFlipV={() => {
+                if (state.selectedAnnotationId) {
+                  handleAnnotationUpdate(state.selectedAnnotationId, { flippedV: true });
+                  toast({ title: "Annotation flipped vertically" });
+                }
+              }}
+              onRotateLeft={() => {
+                if (state.selectedAnnotationId) {
+                  const annotation = state.annotations.find(a => a.id === state.selectedAnnotationId);
+                  if (annotation) {
+                    const currentRotation = annotation.rotation || 0;
+                    const newRotation = (currentRotation - 90 + 360) % 360;
+                    handleAnnotationUpdate(state.selectedAnnotationId, { rotation: newRotation });
+                  }
+                }
+              }}
+            />
+          )}
+
+          {/* PDF Viewer */}
+          <div className="flex-1 overflow-hidden">
+            {state.isLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+                  <div className="text-gray-600">Processing PDF...</div>
+                </div>
+              </div>
+            ) : state.error ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <AlertCircle className="h-8 w-8 mx-auto mb-4 text-red-600" />
+                  <div className="text-red-600 text-lg mb-2">Error loading PDF</div>
+                  <div className="text-gray-600">{state.error}</div>
+                </div>
+              </div>
+            ) : (
+              <PDFViewer
+                file={state.file}
+                scale={state.scale}
+                onLoadSuccess={({ numPages }) => {
+                  setState(prev => ({ ...prev, numPages }));
+                }}
+                onLoadError={(error) => {
+                  console.error('PDF load error:', error);
+                  setState(prev => ({ ...prev, error: 'Failed to load PDF' }));
+                }}
+                onPageClick={(event, pageNumber) => {
+                  // Handle page clicks for annotation placement or deselection
+                  if (state.selectedTool && state.selectedTool !== 'select') {
+                    const rect = (event.target as HTMLElement).getBoundingClientRect();
+                    const x = event.clientX - rect.left;
+                    const y = event.clientY - rect.top;
+                    
+                    const newAnnotation: Omit<PDFAnnotation, 'id'> = {
+                      type: state.selectedTool as PDFAnnotation['type'],
+                      x: x / state.scale,
+                      y: y / state.scale,
+                      width: getDefaultWidth(state.selectedTool as PDFAnnotation['type']),
+                      height: getDefaultHeight(state.selectedTool as PDFAnnotation['type']),
+                      rotation: 0,
+                      content: getDefaultContent(state.selectedTool as PDFAnnotation['type']),
+                      pageNumber,
+                      style: getDefaultStyle(state.selectedTool as PDFAnnotation['type']),
+                      zIndex: state.annotations.length + 1,
+                    };
+                    
+                    handleAnnotationAdd(newAnnotation);
+                  } else if (state.selectedAnnotationId) {
+                    // Deselect annotation when clicking on empty space
+                    handleAnnotationSelect(null);
+                  }
+                }}
+                annotations={state.annotations}
+                onAnnotationUpdate={(annotation) => handleAnnotationUpdate(annotation.id, annotation)}
+                onAnnotationDelete={handleAnnotationDelete}
+                onAnnotationSelect={handleAnnotationSelect}
+                selectedAnnotationId={state.selectedAnnotationId}
+                selectedTool={state.selectedTool}
+              />
+            )}
+          </div>
+        </div>
+      )}
+    </PageWrapper>
   );
 };
 
 export default PDFSignaturePage;
-

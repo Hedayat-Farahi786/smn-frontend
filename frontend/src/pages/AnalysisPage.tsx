@@ -81,29 +81,32 @@ const AnalysisPage: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            AI Document Analysis
-          </h1>
-          <p className="text-muted-foreground">
-            Analyze documents for risks, compliance, and optimization
-            opportunities
-          </p>
+    <div className="min-h-screen bg-blue-50">
+      <div className="p-6 space-y-6">
+        {/* Header */}
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-blue-100">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+                AI Document Analysis
+              </h1>
+              <p className="text-slate-600 mt-1">
+                Analyze documents for risks, compliance, and optimization
+                opportunities
+              </p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button variant="outline" className="border-blue-200 hover:bg-blue-50">
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Document
+              </Button>
+              <Button className="bg-primary hover:bg-primary/90 text-white">
+                <Brain className="h-4 w-4 mr-2" />
+                Analyze Document
+              </Button>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline">
-            <Upload className="h-4 w-4 mr-2" />
-            Upload Document
-          </Button>
-          <Button>
-            <Brain className="h-4 w-4 mr-2" />
-            Analyze Document
-          </Button>
-        </div>
-      </div>
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -155,7 +158,7 @@ const AnalysisPage: React.FC = () => {
                 </p>
                 <p className="text-2xl font-bold">91%</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-blue-500" />
+              <TrendingUp className="h-8 w-8 text-blue-600" />
             </div>
           </CardContent>
         </Card>
@@ -276,7 +279,7 @@ const AnalysisPage: React.FC = () => {
                         ? "text-orange-600"
                         : insight.type === "success"
                         ? "text-green-600"
-                        : "text-blue-600"
+                        : "text-primary"
                     }`}
                   />
                   <div>
@@ -293,6 +296,7 @@ const AnalysisPage: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };

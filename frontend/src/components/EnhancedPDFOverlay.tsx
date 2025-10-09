@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useCallback, useState } from "react";
 import { CheckSquare, Square, Type, Pen, Trash2 } from "lucide-react";
+import { getImageDisplayInfo, screenToImageCoords as utilScreenToImageCoords, imageToScreenCoords as utilImageToScreenCoords, imageToScreenDimensions as utilImageToScreenDimensions } from "../utils/coordinateUtils";
 
 interface SignaturePosition {
   id: string;
@@ -49,6 +50,7 @@ interface EnhancedPDFOverlayProps {
   selectedElementId: string | null;
   onSignatureClick: (signatureId: string) => void;
   onTextClick: (textId: string) => void;
+  onTextDoubleClick?: (textId: string) => void;
   onFormFieldClick: (fieldId: string) => void;
   onSignatureMove: (signatureId: string, x: number, y: number) => void;
   onTextMove: (textId: string, x: number, y: number) => void;
@@ -56,7 +58,6 @@ interface EnhancedPDFOverlayProps {
   onSignatureResize: (signatureId: string, x: number, y: number, width: number, height: number) => void;
   onTextResize: (textId: string, x: number, y: number, width: number, height: number) => void;
   onFormFieldResize: (fieldId: string, x: number, y: number, width: number, height: number) => void;
-  onImageClick: (event: React.MouseEvent<HTMLImageElement>, pageNumber: number, imageDimensions: { width: number; height: number }) => void;
   onDeleteElement: (elementId: string, type: 'signature' | 'text' | 'form') => void;
   currentTool: string;
   currentPage: number;
@@ -72,6 +73,7 @@ const EnhancedPDFOverlay: React.FC<EnhancedPDFOverlayProps> = ({
   selectedElementId,
   onSignatureClick,
   onTextClick,
+  onTextDoubleClick,
   onFormFieldClick,
   onSignatureMove,
   onTextMove,
@@ -79,7 +81,6 @@ const EnhancedPDFOverlay: React.FC<EnhancedPDFOverlayProps> = ({
   onSignatureResize,
   onTextResize,
   onFormFieldResize,
-  onImageClick,
   onDeleteElement,
   currentTool,
   currentPage,
@@ -92,95 +93,32 @@ const EnhancedPDFOverlay: React.FC<EnhancedPDFOverlayProps> = ({
   const [resizeHandle, setResizeHandle] = useState<string>("");
   const [draggedElementId, setDraggedElementId] = useState<string | null>(null);
   const [draggedElementType, setDraggedElementType] = useState<'signature' | 'text' | 'form' | null>(null);
+  const [lastClickTime, setLastClickTime] = useState<number>(0);
+  const [lastClickedTextId, setLastClickedTextId] = useState<string | null>(null);
   const signatureImageCache = useRef<Map<string, HTMLImageElement>>(new Map());
 
   // Calculate the actual displayed image dimensions and position
-  const getImageDisplayInfo = useCallback(() => {
+  const getDisplayInfo = useCallback(() => {
     if (!imageRef.current) return null;
-    
-    const img = imageRef.current;
-    const rect = img.getBoundingClientRect();
-    
-    // Calculate the actual displayed size (considering object-fit: contain)
-    const imgAspectRatio = imageDimensions.width / imageDimensions.height;
-    const containerAspectRatio = rect.width / rect.height;
-    
-    let displayWidth, displayHeight, offsetX, offsetY;
-    
-    if (imgAspectRatio > containerAspectRatio) {
-      // Image is wider than container
-      displayWidth = rect.width;
-      displayHeight = rect.width / imgAspectRatio;
-      offsetX = 0;
-      offsetY = (rect.height - displayHeight) / 2;
-    } else {
-      // Image is taller than container
-      displayHeight = rect.height;
-      displayWidth = rect.height * imgAspectRatio;
-      offsetX = (rect.width - displayWidth) / 2;
-      offsetY = 0;
-    }
-    
-    return {
-      displayWidth,
-      displayHeight,
-      offsetX,
-      offsetY,
-      rect
-    };
+    return getImageDisplayInfo(imageRef.current, imageDimensions);
   }, [imageRef, imageDimensions]);
 
-  // Convert screen coordinates to image coordinates
+  // Small wrappers that call the shared utils (these pass the image element and
+  // image dimensions so the util functions have everything they need).
   const screenToImageCoords = useCallback((screenX: number, screenY: number) => {
-    const displayInfo = getImageDisplayInfo();
-    if (!displayInfo) return { x: 0, y: 0 };
-    
-    const { displayWidth, displayHeight, offsetX, offsetY, rect } = displayInfo;
-    
-    // Convert to relative coordinates within the displayed image
-    const relativeX = (screenX - rect.left - offsetX) / displayWidth;
-    const relativeY = (screenY - rect.top - offsetY) / displayHeight;
-    
-    // Convert to actual image coordinates
-    const imageX = relativeX * imageDimensions.width;
-    const imageY = relativeY * imageDimensions.height;
-    
-    return { x: imageX, y: imageY };
-  }, [getImageDisplayInfo, imageDimensions]);
+    if (!imageRef.current) return { x: 0, y: 0 };
+    return utilScreenToImageCoords(screenX, screenY, imageRef.current, imageDimensions);
+  }, [imageRef, imageDimensions]);
 
-  // Convert image coordinates to screen coordinates
   const imageToScreenCoords = useCallback((imageX: number, imageY: number) => {
-    const displayInfo = getImageDisplayInfo();
-    if (!displayInfo) return { x: 0, y: 0 };
-    
-    const { displayWidth, displayHeight, offsetX, offsetY, rect } = displayInfo;
-    
-    // Convert to relative coordinates
-    const relativeX = imageX / imageDimensions.width;
-    const relativeY = imageY / imageDimensions.height;
-    
-    // Convert to screen coordinates
-    const screenX = rect.left + offsetX + (relativeX * displayWidth);
-    const screenY = rect.top + offsetY + (relativeY * displayHeight);
-    
-    return { x: screenX, y: screenY };
-  }, [getImageDisplayInfo, imageDimensions]);
+    if (!imageRef.current) return { x: 0, y: 0 };
+    return utilImageToScreenCoords(imageX, imageY, imageRef.current, imageDimensions);
+  }, [imageRef, imageDimensions]);
 
-  // Convert image dimensions to screen dimensions
   const imageToScreenDimensions = useCallback((imageWidth: number, imageHeight: number) => {
-    const displayInfo = getImageDisplayInfo();
-    if (!displayInfo) return { width: 0, height: 0 };
-    
-    const { displayWidth, displayHeight } = displayInfo;
-    
-    const relativeWidth = imageWidth / imageDimensions.width;
-    const relativeHeight = imageHeight / imageDimensions.height;
-    
-    return {
-      width: relativeWidth * displayWidth,
-      height: relativeHeight * displayHeight
-    };
-  }, [getImageDisplayInfo, imageDimensions]);
+    if (!imageRef.current) return { width: 0, height: 0 };
+    return utilImageToScreenDimensions(imageWidth, imageHeight, imageRef.current, imageDimensions);
+  }, [imageRef, imageDimensions]);
 
   // Update canvas size and redraw
   const updateCanvas = useCallback(() => {
@@ -190,17 +128,31 @@ const EnhancedPDFOverlay: React.FC<EnhancedPDFOverlayProps> = ({
     const img = imageRef.current;
     const rect = img.getBoundingClientRect();
     
-    // Set canvas size to match the image display area
-    canvas.width = rect.width;
-    canvas.height = rect.height;
-    canvas.style.width = `${rect.width}px`;
-    canvas.style.height = `${rect.height}px`;
+  // Position the canvas exactly over the image using fixed positioning so
+  // it remains aligned regardless of where the overlay component is mounted
+  // in the DOM. Use device pixels for canvas resolution and CSS pixels for
+  // layout size.
+  const cssWidth = rect.width;
+  const cssHeight = rect.height;
+
+  // Ensure canvas uses device pixel ratio for crisp rendering
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.max(1, Math.floor(cssWidth * dpr));
+  canvas.height = Math.max(1, Math.floor(cssHeight * dpr));
+  canvas.style.width = `${cssWidth}px`;
+  canvas.style.height = `${cssHeight}px`;
+
+  // Position overlay over the image using viewport coordinates
+  canvas.style.position = 'fixed';
+  canvas.style.left = `${rect.left}px`;
+  canvas.style.top = `${rect.top}px`;
+  canvas.style.zIndex = '1000';
     
-    // Clear canvas
-    const ctx = canvas.getContext('2d');
+  // Clear canvas and scale context for device pixel ratio
+  const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssWidth, cssHeight);
     
     // Draw signatures
     signatures.forEach(signature => {
@@ -208,18 +160,18 @@ const EnhancedPDFOverlay: React.FC<EnhancedPDFOverlayProps> = ({
       
       const screenPos = imageToScreenCoords(signature.x, signature.y);
       const screenDims = imageToScreenDimensions(signature.width, signature.height);
-      const displayInfo = getImageDisplayInfo();
+      const displayInfo = getDisplayInfo();
       
       if (!displayInfo) return;
       
-      // Adjust coordinates relative to canvas
-      const canvasX = screenPos.x - rect.left;
-      const canvasY = screenPos.y - rect.top;
+  // Adjust coordinates relative to canvas (CSS pixels)
+  const canvasX = screenPos.x - rect.left;
+  const canvasY = screenPos.y - rect.top;
       
       // Draw signature border
       ctx.strokeStyle = selectedElementId === signature.id ? '#3b82f6' : 'transparent';
       ctx.lineWidth = 2;
-      ctx.strokeRect(canvasX, canvasY, screenDims.width, screenDims.height);
+  ctx.strokeRect(canvasX, canvasY, screenDims.width, screenDims.height);
       
       // Draw signature image with caching
       let signatureImg = signatureImageCache.current.get(signature.id);
@@ -229,6 +181,9 @@ const EnhancedPDFOverlay: React.FC<EnhancedPDFOverlayProps> = ({
           if (signatureImg) {
             ctx.drawImage(signatureImg, canvasX, canvasY, screenDims.width, screenDims.height);
           }
+          // In some browsers the first render happens before the image is
+          // loaded; request a redraw to ensure it appears.
+          // We don't call updateCanvas directly here to avoid recursion.
         };
         signatureImg.src = signature.signatureData;
         signatureImageCache.current.set(signature.id, signatureImg);
@@ -243,13 +198,13 @@ const EnhancedPDFOverlay: React.FC<EnhancedPDFOverlayProps> = ({
       if (textAnnotation.pageNumber !== currentPage) return;
       
       const screenPos = imageToScreenCoords(textAnnotation.x, textAnnotation.y);
-      const displayInfo = getImageDisplayInfo();
+      const displayInfo = getDisplayInfo();
       
       if (!displayInfo) return;
       
       // Adjust coordinates relative to canvas
-      const canvasX = screenPos.x - rect.left;
-      const canvasY = screenPos.y - rect.top;
+  const canvasX = screenPos.x - rect.left;
+  const canvasY = screenPos.y - rect.top;
       
       // Set text style
       ctx.font = `${textAnnotation.style.fontStyle} ${textAnnotation.style.fontWeight} ${textAnnotation.style.fontSize}px ${textAnnotation.style.fontFamily}`;
@@ -286,13 +241,13 @@ const EnhancedPDFOverlay: React.FC<EnhancedPDFOverlayProps> = ({
       if (formField.pageNumber !== currentPage) return;
       
       const screenPos = imageToScreenCoords(formField.x, formField.y);
-      const displayInfo = getImageDisplayInfo();
+      const displayInfo = getDisplayInfo();
       
       if (!displayInfo) return;
       
       // Adjust coordinates relative to canvas
-      const canvasX = screenPos.x - rect.left;
-      const canvasY = screenPos.y - rect.top;
+  const canvasX = screenPos.x - rect.left;
+  const canvasY = screenPos.y - rect.top;
       
       // Calculate field size based on type and size setting
       let fieldWidth, fieldHeight;
@@ -377,15 +332,18 @@ const EnhancedPDFOverlay: React.FC<EnhancedPDFOverlayProps> = ({
         ctx.fillText('Sign here', canvasX + fieldWidth / 2, canvasY + fieldHeight / 2 + 4);
       }
     });
-  }, [signatures, textAnnotations, formFields, selectedElementId, imageToScreenCoords, imageToScreenDimensions, getImageDisplayInfo, imageRef, currentPage]);
+  }, [signatures, textAnnotations, formFields, selectedElementId, imageToScreenCoords, imageToScreenDimensions, getDisplayInfo, imageRef, currentPage]);
 
   // Handle mouse events
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!imageRef.current) return;
-    
+
     const rect = imageRef.current.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+    // Use client coordinates so we stay consistent with fixed-position canvas
+    const mouseClientX = e.clientX;
+    const mouseClientY = e.clientY;
+    const mouseX = mouseClientX - rect.left; // CSS pixels within image
+    const mouseY = mouseClientY - rect.top;
     
     // Check if clicking on a signature
     const clickedSignature = signatures.find(signature => {
@@ -394,9 +352,9 @@ const EnhancedPDFOverlay: React.FC<EnhancedPDFOverlayProps> = ({
       const screenDims = imageToScreenDimensions(signature.width, signature.height);
       const canvasX = screenPos.x - rect.left;
       const canvasY = screenPos.y - rect.top;
-      
+
       return mouseX >= canvasX && mouseX <= canvasX + screenDims.width &&
-             mouseY >= canvasY && mouseY <= canvasY + screenDims.height;
+        mouseY >= canvasY && mouseY <= canvasY + screenDims.height;
     });
     
     if (clickedSignature) {
@@ -414,21 +372,32 @@ const EnhancedPDFOverlay: React.FC<EnhancedPDFOverlayProps> = ({
       const screenPos = imageToScreenCoords(textAnnotation.x, textAnnotation.y);
       const canvasX = screenPos.x - rect.left;
       const canvasY = screenPos.y - rect.top;
-      
+
       // Approximate text bounds
       const textWidth = textAnnotation.text.length * textAnnotation.style.fontSize * 0.6;
       const textHeight = textAnnotation.style.fontSize;
-      
+
       return mouseX >= canvasX && mouseX <= canvasX + textWidth &&
-             mouseY >= canvasY && mouseY <= canvasY + textHeight;
+        mouseY >= canvasY && mouseY <= canvasY + textHeight;
     });
     
     if (clickedText) {
-      onTextClick(clickedText.id);
-      setIsDragging(true);
-      setDraggedElementId(clickedText.id);
-      setDraggedElementType('text');
-      setDragStart({ x: mouseX, y: mouseY });
+      const now = Date.now();
+      const isDoubleClick = lastClickedTextId === clickedText.id && now - lastClickTime < 300;
+      
+      if (isDoubleClick && onTextDoubleClick) {
+        onTextDoubleClick(clickedText.id);
+        setLastClickTime(0);
+        setLastClickedTextId(null);
+      } else {
+        onTextClick(clickedText.id);
+        setLastClickTime(now);
+        setLastClickedTextId(clickedText.id);
+        setIsDragging(true);
+        setDraggedElementId(clickedText.id);
+        setDraggedElementType('text');
+        setDragStart({ x: mouseX, y: mouseY });
+      }
       return;
     }
     
@@ -436,8 +405,8 @@ const EnhancedPDFOverlay: React.FC<EnhancedPDFOverlayProps> = ({
     const clickedFormField = formFields.find(formField => {
       if (formField.pageNumber !== currentPage) return false;
       const screenPos = imageToScreenCoords(formField.x, formField.y);
-      const canvasX = screenPos.x - rect.left;
-      const canvasY = screenPos.y - rect.top;
+  const canvasX = screenPos.x - rect.left;
+  const canvasY = screenPos.y - rect.top;
       
       // Calculate field size
       let fieldWidth, fieldHeight;
@@ -464,76 +433,60 @@ const EnhancedPDFOverlay: React.FC<EnhancedPDFOverlayProps> = ({
       setIsDragging(true);
       setDraggedElementId(clickedFormField.id);
       setDraggedElementType('form');
-      setDragStart({ x: mouseX, y: mouseY });
+      setDragStart({ x: mouseClientX, y: mouseClientY });
       return;
     }
     
     // If not clicking on any element and we have a tool active, handle image click
-    if (currentTool !== 'select' && imageRef.current) {
-      const imageCoords = screenToImageCoords(e.clientX, e.clientY);
-      const fakeEvent = {
-        ...e,
-        currentTarget: imageRef.current
-      } as React.MouseEvent<HTMLImageElement>;
-      onImageClick(fakeEvent, currentPage, imageDimensions);
-    }
-  }, [signatures, textAnnotations, formFields, imageToScreenCoords, imageToScreenDimensions, screenToImageCoords, onSignatureClick, onTextClick, onFormFieldClick, onImageClick, imageRef, currentTool, currentPage, imageDimensions]);
+    // Note: Image clicks are handled by the parent HighQualityPDFViewer component
+    // This overlay only handles interactions with existing elements
+  }, [signatures, textAnnotations, formFields, imageToScreenCoords, imageToScreenDimensions, screenToImageCoords, onSignatureClick, onTextClick, onFormFieldClick, imageRef, currentTool, currentPage, imageDimensions]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!isDragging || !draggedElementId || !draggedElementType || !imageRef.current) return;
-    
+
     const rect = imageRef.current.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    
-    const deltaX = mouseX - dragStart.x;
-    const deltaY = mouseY - dragStart.y;
-    
+    const mouseClientX = e.clientX;
+    const mouseClientY = e.clientY;
+
+    const deltaX = mouseClientX - dragStart.x;
+    const deltaY = mouseClientY - dragStart.y;
+
     if (draggedElementType === 'signature') {
       const signature = signatures.find(s => s.id === draggedElementId);
       if (!signature) return;
-      
+
       const screenPos = imageToScreenCoords(signature.x, signature.y);
       const newScreenX = screenPos.x + deltaX;
       const newScreenY = screenPos.y + deltaY;
-      
-      const newImageCoords = screenToImageCoords(
-        newScreenX + rect.left,
-        newScreenY + rect.top
-      );
-      
+
+      const newImageCoords = screenToImageCoords(newScreenX, newScreenY);
+
       onSignatureMove(draggedElementId, newImageCoords.x, newImageCoords.y);
     } else if (draggedElementType === 'text') {
       const textAnnotation = textAnnotations.find(t => t.id === draggedElementId);
       if (!textAnnotation) return;
-      
+
       const screenPos = imageToScreenCoords(textAnnotation.x, textAnnotation.y);
       const newScreenX = screenPos.x + deltaX;
       const newScreenY = screenPos.y + deltaY;
-      
-      const newImageCoords = screenToImageCoords(
-        newScreenX + rect.left,
-        newScreenY + rect.top
-      );
-      
+
+      const newImageCoords = screenToImageCoords(newScreenX, newScreenY);
+
       onTextMove(draggedElementId, newImageCoords.x, newImageCoords.y);
     } else if (draggedElementType === 'form') {
       const formField = formFields.find(f => f.id === draggedElementId);
       if (!formField) return;
-      
+
       const screenPos = imageToScreenCoords(formField.x, formField.y);
       const newScreenX = screenPos.x + deltaX;
       const newScreenY = screenPos.y + deltaY;
-      
-      const newImageCoords = screenToImageCoords(
-        newScreenX + rect.left,
-        newScreenY + rect.top
-      );
-      
+
+      const newImageCoords = screenToImageCoords(newScreenX, newScreenY);
       onFormFieldMove(draggedElementId, newImageCoords.x, newImageCoords.y);
     }
-    
-    setDragStart({ x: mouseX, y: mouseY });
+
+    setDragStart({ x: mouseClientX, y: mouseClientY });
   }, [isDragging, draggedElementId, draggedElementType, dragStart, signatures, textAnnotations, formFields, imageToScreenCoords, screenToImageCoords, onSignatureMove, onTextMove, onFormFieldMove, imageRef]);
 
   const handleMouseUp = useCallback(() => {
@@ -567,15 +520,50 @@ const EnhancedPDFOverlay: React.FC<EnhancedPDFOverlayProps> = ({
     return () => clearTimeout(timeoutId);
   }, [updateCanvas]);
 
-  // Handle window resize
+  // Throttle updates with requestAnimationFrame to avoid flooding the main thread
+  const rafRef = React.useRef<number | null>(null);
+  const scheduleUpdateCanvas = useCallback(() => {
+    if (rafRef.current !== null) return; // already scheduled
+    rafRef.current = window.requestAnimationFrame(() => {
+      rafRef.current = null;
+      updateCanvas();
+    });
+  }, [updateCanvas]);
+
+  // Handle window resize (use scheduler)
   useEffect(() => {
-    const handleResize = () => {
-      setTimeout(updateCanvas, 100); // Delay to ensure image has resized
-    };
-    
+    const handleResize = () => scheduleUpdateCanvas();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [updateCanvas]);
+  }, [scheduleUpdateCanvas]);
+
+  // Update canvas on scroll and when the image size/position changes. Use a
+  // ResizeObserver on the image element (cheaper and more targeted than a
+  // global MutationObserver). All updates use RAF scheduling to keep UI
+  // responsive and avoid freezes on clicks.
+  useEffect(() => {
+    const onScroll = () => scheduleUpdateCanvas();
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    let ro: ResizeObserver | null = null;
+    if (imageRef?.current && (window as any).ResizeObserver) {
+      ro = new ResizeObserver(() => scheduleUpdateCanvas());
+      try {
+        ro.observe(imageRef.current);
+      } catch (err) {
+        // Ignore observe errors on exotic elements
+      }
+    }
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (ro) ro.disconnect();
+      if (rafRef.current !== null) {
+        window.cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, [imageRef, scheduleUpdateCanvas]);
 
   // Handle keyboard events
   useEffect(() => {
@@ -586,8 +574,12 @@ const EnhancedPDFOverlay: React.FC<EnhancedPDFOverlayProps> = ({
   return (
     <canvas
       ref={canvasRef}
-      className={`absolute top-0 left-0 pointer-events-auto ${className}`}
+      className={`${className}`}
       style={{
+        // Only capture pointer events when in select mode so users can place
+        // new elements by clicking the underlying image when in placement
+        // tools such as 'signature' or 'text'.
+        pointerEvents: currentTool === 'select' ? 'auto' : 'none',
         zIndex: 10,
         cursor: currentTool === 'select' ? (isDragging ? 'grabbing' : 'grab') : 'crosshair'
       }}

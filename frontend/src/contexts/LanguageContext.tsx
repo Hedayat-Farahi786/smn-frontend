@@ -10,7 +10,7 @@ import { setLanguage, getLanguage } from "../i18n";
 interface LanguageContextType {
   currentLanguage: string;
   changeLanguage: (language: string) => void;
-  availableLanguages: { code: string; name: string; flag: string }[];
+  availableLanguages: { code: string; name: string; flag: string; flagUrl: string }[];
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
@@ -35,8 +35,8 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
   const [currentLanguage, setCurrentLanguage] = useState<string>(getLanguage());
 
   const availableLanguages = [
-    { code: "en", name: "English", flag: "🇺🇸" },
-    { code: "de", name: "Deutsch", flag: "🇩🇪" },
+    { code: "en", name: "English", flag: "🇺🇸", flagUrl: "https://flagcdn.com/w20/us.png" },
+    { code: "de", name: "Deutsch", flag: "🇩🇪", flagUrl: "https://flagcdn.com/w20/de.png" },
   ];
 
   const changeLanguage = (language: string) => {

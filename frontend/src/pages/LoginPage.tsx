@@ -46,14 +46,14 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100 p-4">
+      <Card className="w-full max-w-md shadow-xl border-blue-200">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <FileSignature className="h-4 w-4 text-primary-foreground" />
+            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg">
+              <FileSignature className="h-5 w-5 text-white" />
             </div>
-            <span className="text-xl font-bold">SignMeNow</span>
+            <span className="text-xl font-bold text-slate-900">SignMeNow</span>
           </div>
           <CardTitle className="text-2xl font-bold">
             {t("auth.welcomeBack")}
@@ -135,7 +135,7 @@ const LoginPage: React.FC = () => {
           <Button
             type="button"
             variant="outline"
-            className="w-full"
+            className="w-full border-blue-200 hover:bg-blue-50"
             onClick={() => {
               // Placeholder for Google login - no actual implementation
               alert("Google login feature coming soon!");

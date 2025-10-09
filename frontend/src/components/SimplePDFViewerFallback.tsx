@@ -40,7 +40,7 @@ const SimplePDFViewerFallback: React.FC<SimplePDFViewerFallbackProps> = ({
   return (
     <div className={`flex flex-col items-center justify-center h-64 ${className}`}>
       <div className="text-center max-w-md">
-        <div className="text-blue-500 mb-4">
+        <div className="text-blue-600 mb-4">
           <FileText className="h-12 w-12 mx-auto" />
         </div>
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -77,3 +77,4 @@ const SimplePDFViewerFallback: React.FC<SimplePDFViewerFallbackProps> = ({
 };
 
 export default SimplePDFViewerFallback;
+

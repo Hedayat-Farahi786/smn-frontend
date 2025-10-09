@@ -76,38 +76,41 @@ const TemplatesPage: React.FC = () => {
   const categories = ["All", "HR", "Legal", "Business", "Real Estate"];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Templates</h1>
-          <p className="text-muted-foreground">
-            Create and manage document templates for faster workflows
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline">
-            <Plus className="h-4 w-4 mr-2" />
-            Import Template
-          </Button>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Template
-          </Button>
-        </div>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-        <div className="flex space-x-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <input
-              placeholder="Search templates..."
-              className="w-full pl-10 pr-4 py-2 border border-input rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            />
+    <div className="min-h-screen bg-blue-50">
+      <div className="p-6 space-y-6">
+        {/* Header */}
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-blue-100">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-slate-900">Templates</h1>
+              <p className="text-slate-600 mt-1">
+                Create and manage document templates for faster workflows
+              </p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button variant="outline" className="border-blue-200 hover:bg-blue-50">
+                <Plus className="h-4 w-4 mr-2" />
+                Import Template
+              </Button>
+              <Button className="bg-primary hover:bg-primary/90 text-white">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Template
+              </Button>
+            </div>
           </div>
-          <Button variant="outline">
+        </div>
+
+        {/* Search and Filters */}
+        <div className="bg-white rounded-xl shadow-sm border border-blue-100 p-6">
+          <div className="flex space-x-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 h-4 w-4" />
+              <input
+                placeholder="Search templates..."
+                className="w-full pl-10 pr-4 py-2 border border-blue-200 rounded-lg bg-white text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <Button variant="outline" className="border-blue-200 hover:bg-blue-50">
             <Filter className="h-4 w-4 mr-2" />
             Filter
           </Button>
@@ -206,6 +209,7 @@ const TemplatesPage: React.FC = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

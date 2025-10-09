@@ -91,7 +91,8 @@ const AnalyticsPage: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-blue-50">
+      <div className="space-y-6 p-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -164,7 +165,7 @@ const AnalyticsPage: React.FC = () => {
                         ? "bg-green-500"
                         : activity.type === "warning"
                         ? "bg-yellow-500"
-                        : "bg-blue-500"
+                        : "bg-blue-600"
                     }`}
                   />
                   <div className="flex-1">
@@ -268,6 +269,7 @@ const AnalyticsPage: React.FC = () => {
             </div>
           </CardContent>
         </Card>
+      </div>
       </div>
     </div>
   );

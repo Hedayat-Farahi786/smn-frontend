@@ -157,7 +157,8 @@ const UserManagementPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-blue-50">
+      <div className="space-y-6 p-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -321,6 +322,7 @@ const UserManagementPage: React.FC = () => {
         user={editingUser}
         mode={modalMode}
       />
+      </div>
     </div>
   );
 };

@@ -95,7 +95,7 @@ export const TooltipContent = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "absolute z-50 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm text-gray-900 dark:text-gray-100 shadow-xl animate-in fade-in-0 zoom-in-95 backdrop-blur-sm",
+        "absolute z-50 overflow-hidden rounded-xl border border-blue-200 dark:border-primary bg-white dark:bg-blue-800 px-4 py-2 text-sm text-blue-900 dark:text-blue-100 shadow-xl animate-in fade-in-0 zoom-in-95 backdrop-blur-sm",
         getPositionClasses(),
         className
       )}

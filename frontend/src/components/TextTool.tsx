@@ -91,7 +91,7 @@ const TextTool: React.FC<TextToolProps> = ({ isActive, onTextAdd }) => {
           size="sm"
           className={`flex items-center gap-2 px-3 py-2 ${
             isActive 
-              ? "bg-blue-600 text-white hover:bg-blue-700" 
+              ? "bg-primary text-white hover:bg-primary/90" 
               : "text-gray-700 hover:bg-gray-100"
           }`}
         >
@@ -251,7 +251,7 @@ const TextTool: React.FC<TextToolProps> = ({ isActive, onTextAdd }) => {
             <Button
               onClick={handleAddText}
               disabled={!text.trim()}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-primary hover:bg-primary/90"
             >
               Add Text
             </Button>

@@ -201,31 +201,46 @@ const LandingPage = () => {
     }
   ];
 
+  // Smooth scroll function
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      const offset = 100; // Offset for fixed navbar
+      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+      const offsetPosition = elementPosition - offset;
+      
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   return (
     <div className="bg-brand-background text-brand-text">
       {/* Floating Navbar */}
       <header className={cn(
         "fixed top-0 left-1/2 -translate-x-1/2 z-30 transition-all duration-300",
-        isScrolled ? "top-4 w-[90%]" : "top-6 w-[90%]"
+        isScrolled ? "top-4 w-[90%] max-w-8xl" : "top-6 w-[90%] max-w-8xl"
       )}>
         <nav className={cn(
-          "flex justify-between items-center px-6 py-4 transition-all duration-300 backdrop-blur-xl rounded-full border border-white/30 shadow-sm",
+          "flex justify-between items-center px-4 md:px-6 py-3 md:py-4 transition-all duration-300 backdrop-blur-xl rounded-full border border-white/30 shadow-sm",
           isScrolled 
             ? "bg-white/60" 
             : "bg-white/50"
         )}>
-          <div className="text-2xl font-bold bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent">
+          <div className="text-xl md:text-2xl font-bold bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent">
             SignMeNow
           </div>
           <div className="hidden md:flex items-center space-x-6">
-            <a href="#features" className="text-gray-700 hover:text-brand-primary transition-colors font-medium">Features</a>
-            <a href="#testimonials" className="text-gray-700 hover:text-brand-primary transition-colors font-medium">Testimonials</a>
+            <button onClick={() => scrollToSection('features')} className="text-gray-700 hover:text-brand-primary transition-colors font-medium">Features</button>
+            <button onClick={() => scrollToSection('testimonials')} className="text-gray-700 hover:text-brand-primary transition-colors font-medium">Testimonials</button>
             <button onClick={() => setIsModalOpen(true)} className="text-gray-700 hover:text-brand-primary transition-colors font-medium">Pricing</button>
           </div>
           <div>
             <button 
               onClick={() => navigate('/login')}
-              className="bg-gradient-to-r from-brand-primary to-brand-accent text-white px-5 py-2.5 rounded-lg font-semibold hover:shadow-lg hover:scale-105 transition-all duration-200"
+              className="bg-gradient-to-r from-brand-primary to-brand-accent text-white px-4 md:px-5 py-2 md:py-2.5 rounded-lg text-sm md:text-base font-semibold hover:shadow-lg hover:scale-105 transition-all duration-200"
             >
               Get Started
             </button>
@@ -238,9 +253,8 @@ const LandingPage = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
-        className="relative h-screen flex items-center justify-center overflow-hidden"
+        className="relative h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-brand-background to-teal-50"
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-brand-background to-teal-50 opacity-50 z-0"></div>
         <div className="absolute inset-0 z-0">
             {/* Subtle background shapes */}
             <motion.div
@@ -262,6 +276,9 @@ const LandingPage = () => {
                 transition={{ duration: 25, repeat: Infinity, repeatType: "reverse" }}
             ></motion.div>
         </div>
+        
+        {/* Smooth gradient transition to white at bottom - Enhanced */}
+        <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-b from-transparent via-white/50 to-white z-[1]"></div>
         <div className="text-center z-10 p-4 max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
           <div className="text-left">
           <motion.h1
@@ -473,13 +490,40 @@ const LandingPage = () => {
       </motion.section>
 
       {/* Features Section - Why You'll Love SignMeNow */}
-      <section id="features" className="py-16 md:py-24 bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">
-        {/* Subtle background pattern */}
-        <div className="absolute inset-0 opacity-30">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(13,148,136,0.05)_0%,transparent_50%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(20,184,166,0.05)_0%,transparent_50%)]" />
+      <section id="features" className="py-20 md:py-32 bg-gradient-to-b from-white via-brand-primary/[0.02] to-white relative overflow-hidden">
+        {/* Background Decorative Shapes - Subtle Side Decorations */}
+        <div className="absolute inset-0 pointer-events-none">
+          {/* Left side - subtle filled circles (larger and more) */}
+          <div className="absolute top-16 left-8 w-40 h-40 rounded-full bg-brand-primary/8"></div>
+          <div className="absolute top-32 left-16 w-32 h-32 rounded-full bg-brand-accent/6"></div>
+          <div className="absolute top-56 left-4 w-36 h-36 rounded-full bg-brand-primary/7"></div>
+          <div className="absolute top-1/3 left-12 w-48 h-48 rounded-full bg-brand-accent/8"></div>
+          <div className="absolute top-[45%] left-6 w-38 h-38 rounded-full bg-brand-primary/7"></div>
+          <div className="absolute top-1/2 left-14 w-40 h-40 rounded-full bg-brand-accent/8"></div>
+          <div className="absolute top-[60%] left-8 w-36 h-36 rounded-full bg-brand-primary/7"></div>
+          <div className="absolute top-[70%] left-16 w-34 h-34 rounded-full bg-brand-accent/8"></div>
+          <div className="absolute bottom-32 left-10 w-40 h-40 rounded-full bg-brand-primary/7"></div>
+          <div className="absolute bottom-16 left-12 w-36 h-36 rounded-full bg-brand-accent/8"></div>
+          
+          {/* Right side - subtle filled circles (larger and more) */}
+          <div className="absolute top-20 right-10 w-42 h-42 rounded-full bg-brand-accent/8"></div>
+          <div className="absolute top-40 right-16 w-34 h-34 rounded-full bg-brand-primary/7"></div>
+          <div className="absolute top-64 right-6 w-38 h-38 rounded-full bg-brand-accent/7"></div>
+          <div className="absolute top-1/3 right-12 w-48 h-48 rounded-full bg-brand-primary/8"></div>
+          <div className="absolute top-[48%] right-8 w-40 h-40 rounded-full bg-brand-accent/7"></div>
+          <div className="absolute top-[58%] right-14 w-36 h-36 rounded-full bg-brand-primary/8"></div>
+          <div className="absolute top-[68%] right-10 w-38 h-38 rounded-full bg-brand-accent/7"></div>
+          <div className="absolute bottom-36 right-16 w-40 h-40 rounded-full bg-brand-primary/8"></div>
+          <div className="absolute bottom-20 right-8 w-42 h-42 rounded-full bg-brand-accent/7"></div>
+          <div className="absolute bottom-6 right-12 w-36 h-36 rounded-full bg-brand-primary/8"></div>
+          
+          {/* Extra subtle ambient circles - larger with blur */}
+          <div className="absolute top-1/4 left-2 w-56 h-56 rounded-full bg-brand-primary/5 blur-2xl"></div>
+          <div className="absolute top-2/3 left-4 w-60 h-60 rounded-full bg-brand-accent/4 blur-3xl"></div>
+          <div className="absolute top-1/3 right-2 w-56 h-56 rounded-full bg-brand-accent/5 blur-2xl"></div>
+          <div className="absolute bottom-1/4 right-4 w-64 h-64 rounded-full bg-brand-primary/4 blur-3xl"></div>
         </div>
-
+        
         <div className="container mx-auto px-6 relative z-10">
           {/* Section Header */}
           <motion.div
@@ -487,83 +531,445 @@ const LandingPage = () => {
             whileInView={{ y: 0, opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-12 md:mb-16"
+            className="text-center mb-16 md:mb-20"
           >
-            <div className="inline-flex items-center gap-2 bg-brand-primary/10 backdrop-blur-sm px-4 py-2 rounded-lg mb-4 border border-brand-primary/20">
-              <Sparkles className="w-4 h-4 text-brand-primary" />
-              <span className="text-sm font-semibold text-brand-primary">AI Powered Platform</span>
-            </div>
-            <h2 className="text-3xl md:text-5xl font-bold mb-4 text-gray-900">
-              Why You'll Love SignMeNow
+            <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-6 text-gray-900 leading-[1.2]">
+              Everything you need,
+              <br />
+              <span className="bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent">
+                all in one place
+              </span>
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Powerful features designed for modern teams
+            <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              Sign documents electronically, analyze with AI, collaborate in real-time, and manage your entire document workflow seamlessly
             </p>
           </motion.div>
 
-          {/* Feature Grid with Cards */}
-          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {featureSections.map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ y: 20, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1, duration: 0.5 }}
-                className="group"
-              >
-                <div className="relative h-full bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-xl hover:border-brand-primary/30 transition-all duration-300">
-                  {/* Subtle gradient on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/5 via-transparent to-brand-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl" />
-                  
-                  <div className="relative">
-                    {/* Icon with background */}
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-gradient-to-br from-brand-primary to-brand-accent text-white mb-4 group-hover:scale-110 transition-transform duration-300 shadow-md">
-                      {feature.icon}
-                    </div>
-
-                    {/* Title */}
-                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-brand-primary transition-colors duration-300">
-                      {feature.title}
-                    </h3>
+          {/* Two Column Feature Showcase */}
+          <div className="max-w-6xl mx-auto space-y-16 md:space-y-24 lg:space-y-32">
+            {/* Feature 1: E-Signature */}
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+              className="grid md:grid-cols-2 gap-8 md:gap-12 items-center"
+            >
+              <div>
+                <div className="inline-flex items-center gap-2 bg-brand-primary/10 px-4 py-2 rounded-lg mb-6">
+                  <FileText className="w-5 h-5 text-brand-primary" />
+                  <span className="text-sm font-semibold text-brand-primary">E-Signature</span>
+                </div>
+                <h3 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+                  Sign & send in seconds
+                </h3>
+                <p className="text-base md:text-lg text-gray-600 mb-6 leading-relaxed">
+                  Legally binding electronic signatures that work on any device. No printing, scanning, or mailing required.
+                </p>
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-3 text-sm md:text-base text-gray-700">
+                    <Check className="w-5 h-5 text-brand-primary flex-shrink-0" />
+                    <span>Legally compliant worldwide</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-sm md:text-base text-gray-700">
+                    <Check className="w-5 h-5 text-brand-primary flex-shrink-0" />
+                    <span>Multiple signature types supported</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-sm md:text-base text-gray-700">
+                    <Check className="w-5 h-5 text-brand-primary flex-shrink-0" />
+                    <span>Real-time tracking & notifications</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="relative">
+                <div className="aspect-square bg-gradient-to-br from-brand-primary/5 to-brand-accent/5 rounded-2xl p-6 md:p-8 flex items-center justify-center relative overflow-hidden">
+                  {/* Multiple documents stacked */}
+                  <div className="relative w-full h-full flex items-center justify-center">
+                    {/* Background documents (stacked effect) */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-44 sm:w-52 h-52 sm:h-60 bg-gray-100 rounded-lg shadow-md transform rotate-6 opacity-50"></div>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-44 sm:w-52 h-52 sm:h-60 bg-gray-50 rounded-lg shadow-lg transform rotate-3 opacity-70"></div>
                     
-                    {/* Description */}
-                    <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                      {feature.description}
-                    </p>
+                    {/* Front document with signature flow */}
+                    <div className="relative w-44 sm:w-52 h-52 sm:h-60 bg-white rounded-lg shadow-2xl border border-gray-200 p-4 sm:p-5">
+                      {/* Document title */}
+                      <div className="flex items-center gap-2 mb-3 sm:mb-4 pb-2 sm:pb-3 border-b border-gray-100">
+                        <div className="w-2 h-2 rounded-full bg-brand-primary"></div>
+                        <div className="w-2 h-2 rounded-full bg-brand-accent"></div>
+                        <div className="w-2 h-2 rounded-full bg-gray-300"></div>
+                        <span className="ml-2 text-[10px] sm:text-xs font-semibold text-gray-700">Contract Agreement</span>
+                      </div>
+                      
+                      {/* Document content */}
+                      <div className="space-y-2 mb-4">
+                        <div className="h-1.5 bg-gray-100 rounded w-full"></div>
+                        <div className="h-1.5 bg-gray-100 rounded w-11/12"></div>
+                        <div className="h-1.5 bg-gray-100 rounded w-full"></div>
+                        <div className="h-1.5 bg-gray-100 rounded w-9/12"></div>
+                        <div className="h-1.5 bg-gray-100 rounded w-full"></div>
+                      </div>
+                      
+                      {/* Signature field */}
+                      <div className="absolute bottom-5 left-5 right-5">
+                        <div className="bg-gradient-to-r from-brand-primary/10 to-brand-accent/10 rounded-lg p-3 border border-brand-primary/20">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-[10px] text-gray-500 font-medium">Sign Here</span>
+                            <div className="flex items-center gap-1">
+                              <div className="w-1 h-1 rounded-full bg-brand-primary animate-pulse"></div>
+                              <span className="text-[10px] text-brand-primary font-semibold">Active</span>
+                            </div>
+                          </div>
+                          <div className="h-8 flex items-center">
+                            <svg width="80" height="24" viewBox="0 0 80 24" className="text-brand-primary">
+                              <path
+                                d="M 2 15 Q 8 8, 16 12 T 32 15 Q 40 18, 48 15 T 64 12 Q 70 9, 76 12"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                fill="none"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Floating status badges */}
+                    <div className="absolute top-8 right-8 bg-white rounded-lg shadow-lg px-3 py-2 border border-brand-primary/20">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-500" />
+                        <span className="text-xs font-semibold text-gray-700">Signed</span>
+                      </div>
+                    </div>
+                    
+                    <div className="absolute bottom-8 left-8 bg-gradient-to-r from-brand-primary to-brand-accent text-white rounded-lg shadow-lg px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4" />
+                        <span className="text-xs font-bold">2 of 3</span>
+                      </div>
+                    </div>
+                    
+                    {/* Decorative elements */}
+                    <div className="absolute top-16 left-12 w-16 h-16 bg-brand-primary/10 rounded-full blur-xl"></div>
+                    <div className="absolute bottom-16 right-12 w-20 h-20 bg-brand-accent/10 rounded-full blur-xl"></div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
 
-                    {/* Stats with icon */}
-                    <div className="flex items-center gap-2 text-brand-primary">
-                      <div className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse" />
-                      <span className="text-xs font-semibold">{feature.stats}</span>
+            {/* Feature 2: AI Analysis */}
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+              className="grid md:grid-cols-2 gap-8 md:gap-12 items-center"
+            >
+              <div className="order-2 md:order-1 relative">
+                <div className="aspect-square bg-gradient-to-br from-brand-primary/5 to-brand-accent/5 rounded-2xl p-6 md:p-8 flex items-center justify-center relative overflow-hidden">
+                  {/* AI Chat Interface */}
+                  <div className="relative w-full h-full flex items-center justify-center">
+                    {/* Modern Chat window - Responsive width */}
+                    <div className="relative w-64 sm:w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+                      {/* Professional Header */}
+                      <div className="bg-white px-4 py-3 border-b border-gray-100">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-brand-primary to-brand-accent flex items-center justify-center shadow-md">
+                            <Brain className="w-4 h-4 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-semibold text-gray-900 text-xs">AI Assistant</div>
+                            <div className="flex items-center gap-1">
+                              <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                              <span className="text-[10px] text-gray-500">Online</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Chat messages - More vertical space */}
+                      <div className="p-4 space-y-3 bg-gray-50 h-64">
+                        {/* User message */}
+                        <div className="flex justify-end">
+                          <div className="bg-white rounded-2xl rounded-tr-sm px-3 py-2 max-w-[85%] shadow-sm border border-gray-100">
+                            <p className="text-xs text-gray-700 leading-relaxed">What are the payment terms in this contract?</p>
+                          </div>
+                        </div>
+                        
+                        {/* AI response */}
+                        <div className="flex justify-start gap-2">
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-brand-primary to-brand-accent flex items-center justify-center flex-shrink-0 shadow-sm">
+                            <Brain className="w-3 h-3 text-white" />
+                          </div>
+                          <div className="bg-gradient-to-br from-brand-primary to-brand-accent rounded-2xl rounded-tl-sm px-3 py-2 max-w-[80%] shadow-md">
+                            <p className="text-xs text-white leading-relaxed">Payment is due within 30 days of invoice date. Net 30 terms apply with a 2% discount for early payment.</p>
+                          </div>
+                        </div>
+                        
+                        {/* Typing indicator */}
+                        <div className="flex justify-start gap-2">
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-brand-primary to-brand-accent flex items-center justify-center flex-shrink-0 shadow-sm">
+                            <Brain className="w-3 h-3 text-white" />
+                          </div>
+                          <div className="bg-white rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm border border-gray-100">
+                            <div className="flex gap-1.5">
+                              <div className="w-2 h-2 bg-brand-primary rounded-full animate-bounce"></div>
+                              <div className="w-2 h-2 bg-brand-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                              <div className="w-2 h-2 bg-brand-primary rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Floating badge */}
+                    <div className="absolute top-8 right-8 bg-white rounded-lg shadow-lg px-3 py-2 border border-brand-primary/20">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-brand-primary" />
+                        <span className="text-xs font-semibold text-gray-700">AI Powered</span>
+                      </div>
+                    </div>
+                    
+                    {/* Decorative elements */}
+                    <div className="absolute bottom-12 right-8 w-16 h-16 bg-brand-primary/10 rounded-full blur-xl"></div>
+                    <div className="absolute top-16 right-16 w-20 h-20 bg-brand-accent/10 rounded-full blur-xl"></div>
+                  </div>
+                </div>
+              </div>
+              <div className="order-1 md:order-2">
+                <div className="inline-flex items-center gap-2 bg-brand-primary/10 px-4 py-2 rounded-lg mb-6">
+                  <Brain className="w-5 h-5 text-brand-primary" />
+                  <span className="text-sm font-semibold text-brand-primary">AI Intelligence</span>
+                </div>
+                <h3 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+                  Chat with your documents
+                </h3>
+                <p className="text-base md:text-lg text-gray-600 mb-6 leading-relaxed">
+                  Ask questions, extract insights, and get instant answers from any PDF using advanced AI technology.
+                </p>
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-3 text-sm md:text-base text-gray-700">
+                    <Check className="w-5 h-5 text-brand-primary flex-shrink-0" />
+                    <span>Instant document analysis</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-sm md:text-base text-gray-700">
+                    <Check className="w-5 h-5 text-brand-primary flex-shrink-0" />
+                    <span>Smart content extraction</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-sm md:text-base text-gray-700">
+                    <Check className="w-5 h-5 text-brand-primary flex-shrink-0" />
+                    <span>Natural language queries</span>
+                  </li>
+                </ul>
+              </div>
+            </motion.div>
+
+            {/* Feature 3: Collaboration */}
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+              className="grid md:grid-cols-2 gap-8 md:gap-12 items-center"
+            >
+              <div>
+                <div className="inline-flex items-center gap-2 bg-brand-primary/10 px-4 py-2 rounded-lg mb-6">
+                  <Users className="w-5 h-5 text-brand-primary" />
+                  <span className="text-sm font-semibold text-brand-primary">Team Collaboration</span>
+                </div>
+                <h3 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+                  Work together seamlessly
+                </h3>
+                <p className="text-base md:text-lg text-gray-600 mb-6 leading-relaxed">
+                  Collaborate with your team in real-time. Share, comment, and manage documents together effortlessly.
+                </p>
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-3 text-sm md:text-base text-gray-700">
+                    <Check className="w-5 h-5 text-brand-primary flex-shrink-0" />
+                    <span>Real-time collaboration</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-sm md:text-base text-gray-700">
+                    <Check className="w-5 h-5 text-brand-primary flex-shrink-0" />
+                    <span>Role-based permissions</span>
+                  </li>
+                  <li className="flex items-center gap-3 text-sm md:text-base text-gray-700">
+                    <Check className="w-5 h-5 text-brand-primary flex-shrink-0" />
+                    <span>Activity tracking & audit logs</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="relative">
+                <div className="aspect-square bg-gradient-to-br from-brand-primary/5 to-brand-accent/5 rounded-2xl p-4 sm:p-6 md:p-8 flex items-center justify-center relative overflow-hidden">
+                  {/* Team Workflow Visual - Clean & Modern */}
+                  <div className="relative flex items-center justify-center gap-3 sm:gap-4 md:gap-6 scale-90 sm:scale-95 md:scale-100">
+                    {/* Document 1 - Draft */}
+                    <div className="relative">
+                      <div className="w-24 sm:w-28 md:w-32 h-36 sm:h-40 md:h-44 bg-white rounded-lg shadow-xl border-2 border-gray-200 p-2 sm:p-3 relative overflow-hidden">
+                        {/* Document header */}
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex gap-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
+                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
+                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
+                          </div>
+                        </div>
+                        
+                        {/* Content lines */}
+                        <div className="space-y-2">
+                          <div className="h-1.5 bg-gray-200 rounded w-full"></div>
+                          <div className="h-1.5 bg-gray-200 rounded w-4/5"></div>
+                          <div className="h-1.5 bg-gray-200 rounded w-full"></div>
+                          <div className="h-1.5 bg-gray-200 rounded w-3/5"></div>
+                          <div className="h-6 bg-gray-100 rounded mt-3"></div>
+                          <div className="h-1.5 bg-gray-200 rounded w-full"></div>
+                          <div className="h-1.5 bg-gray-200 rounded w-4/5"></div>
+                        </div>
+                        
+                        {/* Status badge */}
+                        <div className="absolute bottom-2 left-2 right-2 bg-gray-50 border border-gray-200 rounded px-2 py-1 flex items-center justify-center">
+                          <Clock className="w-3 h-3 text-gray-500 mr-1" />
+                          <span className="text-[9px] font-semibold text-gray-600">Draft</span>
+                        </div>
+                      </div>
+                      
+                      {/* User avatar on document */}
+                      <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center text-white text-xs font-bold shadow-lg border-2 border-white">
+                        J
+                      </div>
+                    </div>
+                    
+                    {/* Arrow indicating workflow */}
+                    <div className="flex items-center justify-center">
+                      <ArrowRight className="w-6 h-6 text-gray-400" />
+                    </div>
+                    
+                    {/* Document 2 - Under Review */}
+                    <div className="relative">
+                      <div className="w-32 h-44 bg-white rounded-lg shadow-xl border-2 border-brand-accent/25 p-3 relative overflow-hidden">
+                        {/* Document header */}
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex gap-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
+                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
+                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
+                          </div>
+                        </div>
+                        
+                        {/* Content lines */}
+                        <div className="space-y-2">
+                          <div className="h-1.5 bg-gray-200 rounded w-full"></div>
+                          <div className="h-1.5 bg-gray-200 rounded w-4/5"></div>
+                          <div className="h-1.5 bg-gray-200 rounded w-full"></div>
+                          <div className="h-1.5 bg-brand-accent/15 rounded w-3/5 border border-brand-accent/20"></div>
+                          <div className="h-6 bg-brand-accent/8 rounded mt-3 border border-brand-accent/15"></div>
+                          <div className="h-1.5 bg-gray-200 rounded w-full"></div>
+                          <div className="h-1.5 bg-gray-200 rounded w-4/5"></div>
+                        </div>
+                        
+                        {/* Status badge */}
+                        <div className="absolute bottom-2 left-2 right-2 bg-brand-accent/8 border border-brand-accent/25 rounded px-2 py-1 flex items-center justify-center">
+                          <Users className="w-3 h-3 text-brand-accent/90 mr-1" />
+                          <span className="text-[9px] font-semibold text-brand-accent/90">Reviewing</span>
+                        </div>
+                      </div>
+                      
+                      {/* Multiple user avatars */}
+                      <div className="absolute -top-2 -right-2 flex -space-x-2">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-accent to-brand-primary flex items-center justify-center text-white text-xs font-bold shadow-lg border-2 border-white z-10">
+                          M
+                        </div>
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-primary to-brand-accent flex items-center justify-center text-white text-xs font-bold shadow-lg border-2 border-white">
+                          S
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Arrow indicating workflow */}
+                    <div className="flex items-center justify-center">
+                      <ArrowRight className="w-6 h-6 text-gray-400" />
+                    </div>
+                    
+                    {/* Document 3 - Signed */}
+                    <div className="relative">
+                      <div className="w-32 h-44 bg-white rounded-lg shadow-xl border-2 border-brand-primary/40 p-3 relative overflow-hidden">
+                        {/* Document header */}
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex gap-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
+                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
+                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
+                          </div>
+                        </div>
+                        
+                        {/* Content lines */}
+                        <div className="space-y-2">
+                          <div className="h-1.5 bg-gray-200 rounded w-full"></div>
+                          <div className="h-1.5 bg-gray-200 rounded w-4/5"></div>
+                          <div className="h-1.5 bg-gray-200 rounded w-full"></div>
+                          <div className="h-1.5 bg-gray-200 rounded w-3/5"></div>
+                          <div className="h-6 bg-gray-100 rounded mt-3"></div>
+                          <div className="h-1.5 bg-gray-200 rounded w-full"></div>
+                          <div className="h-1.5 bg-gray-200 rounded w-4/5"></div>
+                        </div>
+                        
+                        {/* Checkmark overlay */}
+                        <div className="absolute inset-0 bg-brand-primary/5 flex items-center justify-center">
+                          <div className="w-12 h-12 rounded-full bg-brand-primary flex items-center justify-center shadow-xl">
+                            <Check className="w-7 h-7 text-white stroke-[3]" />
+                          </div>
+                        </div>
+                        
+                        {/* Status badge */}
+                        <div className="absolute bottom-2 left-2 right-2 bg-brand-primary/10 border border-brand-primary/30 rounded px-2 py-1 flex items-center justify-center">
+                          <Shield className="w-3 h-3 text-brand-primary mr-1" />
+                          <span className="text-[9px] font-semibold text-brand-primary">Signed</span>
+                        </div>
+                      </div>
+                      
+                      {/* User avatar on document */}
+                      <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-gradient-to-br from-brand-primary to-brand-accent flex items-center justify-center text-white text-xs font-bold shadow-lg border-2 border-white">
+                        A
+                      </div>
                     </div>
                   </div>
-
-                  {/* Bottom accent */}
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-brand-primary to-brand-accent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+                  
+                  {/* Floating info badge */}
+                  <div className="absolute top-6 right-6 bg-white rounded-lg shadow-xl px-3 py-2 border border-brand-primary/20">
+                    <div className="flex items-center gap-2">
+                      <div className="flex -space-x-1">
+                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 border-2 border-white flex items-center justify-center text-white text-[8px] font-bold">J</div>
+                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-brand-accent to-brand-primary border-2 border-white flex items-center justify-center text-white text-[8px] font-bold">M</div>
+                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-brand-primary to-brand-accent border-2 border-white flex items-center justify-center text-white text-[8px] font-bold">S</div>
+                      </div>
+                      <span className="text-xs font-bold text-gray-700">Team</span>
+                    </div>
+                  </div>
+                  
+                  {/* Decorative elements */}
+                  <div className="absolute bottom-8 left-8 w-20 h-20 bg-brand-primary/10 rounded-full blur-2xl"></div>
+                  <div className="absolute top-12 right-12 w-24 h-24 bg-brand-accent/10 rounded-full blur-2xl"></div>
                 </div>
-              </motion.div>
-            ))}
+              </div>
+            </motion.div>
           </div>
 
           {/* Bottom CTA */}
           <motion.div
-            initial={{ y: 20, opacity: 0 }}
+            initial={{ y: 30, opacity: 0 }}
             whileInView={{ y: 0, opacity: 1 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.6, duration: 0.5 }}
-            className="text-center mt-12 md:mt-16"
+            transition={{ delay: 0.4, duration: 0.6 }}
+            className="text-center mt-20 md:mt-32"
           >
-            <p className="text-gray-600 mb-6">
-              Trusted by <span className="font-bold text-brand-primary">50,000+</span> professionals worldwide
-            </p>
             <button 
               onClick={() => navigate('/login')}
-              className="bg-gradient-to-r from-brand-primary to-brand-accent text-white px-8 py-4 rounded-lg font-semibold text-base hover:shadow-xl hover:shadow-brand-primary/20 hover:scale-105 transition-all duration-300 inline-flex items-center gap-2"
+              className="bg-gradient-to-r from-brand-primary to-brand-accent text-white px-10 py-5 rounded-lg font-bold text-lg hover:shadow-xl hover:shadow-brand-primary/20 hover:scale-105 transition-all duration-300 inline-flex items-center gap-3"
             >
               Get Started Free
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-6 h-6" />
             </button>
+            <p className="text-gray-500 mt-6 text-sm">
+              No credit card required • Start in seconds
+            </p>
           </motion.div>
         </div>
       </section>

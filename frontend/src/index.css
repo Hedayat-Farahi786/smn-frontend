@@ -4,6 +4,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Smooth scrolling for the entire page */
+html {
+  scroll-behavior: smooth;
+}
+
 @layer base {
   :root {
     --background: 210 40% 98%; /* #F8FAFC */

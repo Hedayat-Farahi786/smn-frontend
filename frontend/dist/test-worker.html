@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PDF.js Worker Test</title>
+</head>
+<body>
+    <h1>PDF.js Worker Test</h1>
+    <div id="status">Testing worker...</div>
+    
+    <script>
+        // Test if the worker file is accessible
+        fetch('/pdf.worker.min.js')
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('status').innerHTML = '✅ Worker file is accessible';
+                } else {
+                    document.getElementById('status').innerHTML = '❌ Worker file not found: ' + response.status;
+                }
+            })
+            .catch(error => {
+                document.getElementById('status').innerHTML = '❌ Error accessing worker: ' + error.message;
+            });
+    </script>
+</body>
+</html>

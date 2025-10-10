@@ -1,5 +1,7 @@
 import React from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useTranslation } from "../hooks/useTranslation";
+import { useLanguage } from "../contexts/LanguageContext";
 import {
   FileText,
   Users,
@@ -36,39 +38,41 @@ import { useNavigate } from "react-router-dom";
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const { isRTL } = useLanguage();
 
   // Dynamic greeting based on current time
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 17) return "Good afternoon";
-    return "Good evening";
+    if (hour < 12) return t("dashboard.goodMorning");
+    if (hour < 17) return t("dashboard.goodAfternoon");
+    return t("dashboard.goodEvening");
   };
 
   const stats = [
     {
-      title: "Documents Signed",
+      title: t("dashboard.documentsSigned"),
       value: "124",
       change: "+12",
       trend: "up" as const,
       icon: FileSignature,
     },
     {
-      title: "Awaiting Signature",
+      title: t("dashboard.awaitingSignature"),
       value: "8",
       change: "-3",
       trend: "down" as const,
       icon: Clock,
     },
     {
-      title: "Inbox",
+      title: t("nav.inbox"),
       value: "34",
       change: "+5",
       trend: "up" as const,
       icon: Inbox,
     },
     {
-      title: "Messages",
+      title: t("nav.messages"),
       value: "16",
       change: "+23",
       trend: "up" as const,
@@ -78,50 +82,50 @@ const DashboardPage: React.FC = () => {
 
   const recentActivities = [
     {
-      text: "Employment Agreement completed by John Smith",
-      time: "2 minutes ago",
+      text: "dashboard.activity.item1.text",
+      time: "dashboard.activity.item1.time",
       type: "completed",
       avatar: "JS",
     },
     {
-      text: "NDA signature pending from Sarah Johnson",
-      time: "5 minutes ago",
+      text: "dashboard.activity.item2.text",
+      time: "dashboard.activity.item2.time",
       type: "pending",
       avatar: "SJ",
     },
     {
-      text: "Service Contract uploaded by Michael Chen",
-      time: "12 minutes ago",
+      text: "dashboard.activity.item3.text",
+      time: "dashboard.activity.item3.time",
       type: "uploaded",
       avatar: "MC",
     },
     {
-      text: "Team meeting notes shared with 5 members",
-      time: "1 hour ago",
+      text: "dashboard.activity.item4.text",
+      time: "dashboard.activity.item4.time",
       type: "shared",
       avatar: "TM",
     },
     {
-      text: "Quarterly report signed and archived",
-      time: "2 hours ago",
+      text: "dashboard.activity.item5.text",
+      time: "dashboard.activity.item5.time",
       type: "completed",
       avatar: "QR",
     },
     {
-      text: "Partnership agreement reviewed by Legal team",
-      time: "3 hours ago",
+      text: "dashboard.activity.item6.text",
+      time: "dashboard.activity.item6.time",
       type: "shared",
       avatar: "LT",
     },
     {
-      text: "Invoice template updated by Finance dept",
-      time: "4 hours ago",
+      text: "dashboard.activity.item7.text",
+      time: "dashboard.activity.item7.time",
       type: "uploaded",
       avatar: "FD",
     },
     {
-      text: "Client contract awaiting final approval",
-      time: "5 hours ago",
+      text: "dashboard.activity.item8.text",
+      time: "dashboard.activity.item8.time",
       type: "pending",
       avatar: "CC",
     },
@@ -130,29 +134,29 @@ const DashboardPage: React.FC = () => {
   const quickActions = [
     {
       icon: Plus,
-      label: "Upload Document",
-      description: "Add new PDF to sign",
+      label: "dashboard.actions.uploadDocument.label",
+      description: "dashboard.actions.uploadDocument.desc",
       shortcut: "Ctrl+U",
       onClick: () => navigate('/pdf-signature')
     },
     {
       icon: FileSignature,
-      label: "Sign Document",
-      description: "Sign existing PDF",
+      label: "dashboard.actions.signDocument.label",
+      description: "dashboard.actions.signDocument.desc",
       shortcut: "Ctrl+S",
       onClick: () => navigate('/pdf-signature')
     },
     {
       icon: Send,
-      label: "Request a Signature",
-      description: "Send document for signing",
+      label: "dashboard.actions.requestSignature.label",
+      description: "dashboard.actions.requestSignature.desc",
       shortcut: "Ctrl+R",
       onClick: () => {}
     },
     {
       icon: Brain,
-      label: "Analyze with A.I",
-      description: "AI document insights",
+      label: "dashboard.actions.analyzeWithAI.label",
+      description: "dashboard.actions.analyzeWithAI.desc",
       shortcut: "Ctrl+A",
       onClick: () => {}
     },
@@ -223,15 +227,15 @@ const DashboardPage: React.FC = () => {
       title={
         <div className="flex items-center gap-3">
           <span className="text-2xl">👋</span>
-          <span>{`${getGreeting()}, Hedayat Farahi`}</span>
+          <span>{`${getGreeting()}, ${user?.firstName ? `${user.firstName} ${user.lastName ?? ''}`.trim() : (user?.username || t('nav.myProfile'))}`}</span>
         </div>
       }
-      description="Manage your PDF signatures and documents"
+      description={t("dashboard.description")}
       actions={
         <>
           <Button className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground border-0 shadow-lg">
             <Crown className="h-4 w-4 mr-2" />
-            Upgrade to Pro
+            {t("dashboard.upgradeToPro")}
           </Button>
         </>
       }
@@ -259,11 +263,11 @@ const DashboardPage: React.FC = () => {
               <div className="p-6 border-b border-border flex-shrink-0">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-foreground">
-                    Recent Activity
+                    {t("dashboard.recentActivity")}
                   </h3>
                   <Button variant="outline" size="sm" className="hover:bg-accent">
                     <Filter className="h-4 w-4 mr-2" />
-                    Filter
+                    {t("common.filter")}
                   </Button>
                 </div>
               </div>
@@ -273,18 +277,18 @@ const DashboardPage: React.FC = () => {
                   return (
                     <div
                       key={index}
-                      className="flex items-start space-x-4 p-4 hover:bg-primary/5 rounded-lg transition-colors"
+                      className={`flex items-start ${isRTL ? 'space-x-reverse space-x-4' : 'space-x-4'} p-4 hover:bg-primary/5 rounded-lg transition-colors`}
                     >
                       <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary text-sm font-medium flex-shrink-0">
                         {activity.avatar}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground leading-relaxed">
-                          {activity.text}
+                          {t(activity.text)}
                         </p>
                         <div className="flex items-center mt-2 text-xs text-muted-foreground">
                           <ActivityIcon className="h-3 w-3 mr-1" />
-                          {activity.time}
+                          {t(activity.time)}
                         </div>
                       </div>
                     </div>
@@ -299,7 +303,7 @@ const DashboardPage: React.FC = () => {
             <div className="bg-card rounded-xl shadow-sm border border-border h-[480px] flex flex-col">
               <div className="p-6 border-b border-border flex-shrink-0">
                 <h3 className="text-lg font-semibold text-foreground">
-                  Quick Actions
+                  {t("dashboard.quickActions")}
                 </h3>
               </div>
               <div className="flex-1 p-6 space-y-3">
@@ -314,10 +318,10 @@ const DashboardPage: React.FC = () => {
                     </div>
                     <div className="flex-1">
                       <div className="font-medium text-foreground">
-                        {action.label}
+                        {t(action.label)}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        {action.description}
+                        {t(action.description)}
                       </div>
                     </div>
                     <div className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">

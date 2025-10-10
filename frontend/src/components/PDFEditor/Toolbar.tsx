@@ -10,13 +10,7 @@ import {
   Redo
 } from 'lucide-react';
 import { ToolbarProps } from '../../types/pdf-editor';
-
-const tools = [
-  { id: 'select', label: 'Select', icon: MousePointer, description: 'Select and move elements' },
-  { id: 'text', label: 'Text', icon: Type, description: 'Add text annotation' },
-  { id: 'signature', label: 'Signature', icon: Pen, description: 'Add signature field' },
-  { id: 'rectangle', label: 'Rectangle', icon: Square, description: 'Add rectangle' },
-];
+import { useTranslation } from '../../hooks/useTranslation';
 
 const Toolbar: React.FC<ToolbarProps> = ({
   selectedTool,
@@ -32,6 +26,14 @@ const Toolbar: React.FC<ToolbarProps> = ({
   totalPages,
   onPageChange,
 }) => {
+  const { t } = useTranslation();
+
+  const tools = [
+    { id: 'select', label: t('pdf.toolbar.select'), icon: MousePointer, description: t('pdf.toolbar.selectDesc') },
+    { id: 'text', label: t('pdf.toolbar.text'), icon: Type, description: t('pdf.toolbar.textDesc') },
+    { id: 'signature', label: t('pdf.toolbar.signature'), icon: Pen, description: t('pdf.toolbar.signatureDesc') },
+    { id: 'rectangle', label: t('pdf.toolbar.rectangle'), icon: Square, description: t('pdf.toolbar.rectangleDesc') },
+  ];
 
 
   return (
@@ -74,7 +76,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               className="flex items-center space-x-1"
             >
               <Undo className="h-4 w-4" />
-              <span>Undo</span>
+              <span>{t('pdf.toolbar.undo')}</span>
             </Button>
             
             <Button
@@ -85,7 +87,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               className="flex items-center space-x-1"
             >
               <Redo className="h-4 w-4" />
-              <span>Redo</span>
+              <span>{t('pdf.toolbar.redo')}</span>
             </Button>
             
             <Button
@@ -94,7 +96,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
               size="sm"
             >
               <Download className="h-4 w-4" />
-              <span>Save PDF</span>
+              <span>{t('pdf.toolbar.savePdf')}</span>
             </Button>
           </div>
         </div>

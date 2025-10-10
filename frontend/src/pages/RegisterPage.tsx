@@ -115,7 +115,7 @@ const RegisterPage: React.FC = () => {
             {/* <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg">
               <FileSignature className="h-5 w-5 text-white" />
             </div> */}
-            <span className="text-xl font-bold text-foreground border-primary border-b pb-2">SignMeNow</span>
+            <span className="text-xl font-bold text-foreground border-primary border-b pb-2">{t("common.signMeNow")}</span>
           </div>
           <CardTitle className="text-2xl font-bold">
             {t("auth.createAccount")}
@@ -134,16 +134,16 @@ const RegisterPage: React.FC = () => {
             <div className="space-y-4">
               <div className="flex items-center space-x-2 mb-4">
                 <User className="h-5 w-5 text-primary" />
-                <h3 className="text-lg font-semibold">Basic Information</h3>
+                <h3 className="text-lg font-semibold">{t("auth.basicInformation")}</h3>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="username">Username *</Label>
+                  <Label htmlFor="username">{t("common.usernameRequired")}</Label>
                   <Input
                     id="username"
                     type="text"
-                    placeholder="Enter your username"
+                    placeholder={t("common.enterUsername")}
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
@@ -151,11 +151,11 @@ const RegisterPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email *</Label>
+                  <Label htmlFor="email">{t("common.emailRequired")}</Label>
                   <Input
                     id="email"
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder={t("common.enterEmail")}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -165,12 +165,12 @@ const RegisterPage: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password *</Label>
+                  <Label htmlFor="password">{t("common.passwordRequired")}</Label>
                   <div className="relative">
                     <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
+                      placeholder={t("common.enterPassword")}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -192,12 +192,12 @@ const RegisterPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                  <Label htmlFor="confirmPassword">{t("common.confirmPasswordRequired")}</Label>
                   <div className="relative">
                     <Input
                       id="confirmPassword"
                       type={showConfirmPassword ? "text" : "password"}
-                      placeholder="Confirm your password"
+                      placeholder={t("common.confirmPasswordPlaceholder")}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
@@ -392,10 +392,10 @@ const RegisterPage: React.FC = () => {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating account...
+                  {t('auth.creatingAccount')}
                 </>
               ) : (
-                "Create Account"
+                t('auth.createAccount')
               )}
             </Button>
           </form>
@@ -419,7 +419,7 @@ const RegisterPage: React.FC = () => {
             className="w-full hover:bg-accent"
             onClick={() => {
               // Placeholder for Google login - no actual implementation
-              alert("Google login feature coming soon!");
+              alert(t('auth.googleLoginComingSoon'));
             }}
           >
             <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">

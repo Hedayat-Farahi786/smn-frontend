@@ -18,6 +18,7 @@ import {
   Trash2,
 } from "lucide-react";
 import SignaturePad from "signature_pad";
+import { useTranslation } from "../hooks/useTranslation";
 
 interface SignatureModalProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
   onClose,
   onSignatureCreate,
 }) => {
+  const { t } = useTranslation();
   const [method, setMethod] = useState<SignatureMethod>('type');
   const [signatureName, setSignatureName] = useState('Alex Appleseed');
   const [selectedColor, setSelectedColor] = useState('#000000');
@@ -111,12 +113,12 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
           throttle: 8,
           minDistance: 2,
           velocityFilterWeight: 0.7,
-          onEnd: () => {
-            const isEmpty = signaturePad.current ? signaturePad.current.isEmpty() : true;
-            setHasDrawnSignature(!isEmpty);
-            console.log('Signature pad onEnd - isEmpty:', isEmpty, 'hasDrawnSignature:', !isEmpty);
-          }
         });
+        (signaturePad.current as any).onEnd = () => {
+          const isEmpty = signaturePad.current ? signaturePad.current.isEmpty() : true;
+          setHasDrawnSignature(!isEmpty);
+          console.log('Signature pad onEnd - isEmpty:', isEmpty, 'hasDrawnSignature:', !isEmpty);
+        };
       }, 100);
       
       return () => clearTimeout(timer);
@@ -175,7 +177,7 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
           // Enable high-quality rendering
           ctx.imageSmoothingEnabled = true;
           ctx.imageSmoothingQuality = 'high';
-          ctx.textRenderingOptimization = 'optimizeQuality';
+          // Note: textRenderingOptimization is not a standard property; skipping in TypeScript
           
           // Clear and render text
           ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -301,17 +303,17 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Create signature</DialogTitle>
+          <DialogTitle>{t('pdf.signatureModal.title')}</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
           {/* Method Selection */}
           <div className="flex space-x-1">
             {[
-              { id: 'type', label: 'Type', icon: Type },
-              { id: 'draw', label: 'Draw', icon: Pen },
-              { id: 'upload', label: 'Upload Image', icon: Upload },
-              { id: 'camera', label: 'Camera', icon: Camera },
+              { id: 'type', label: t('pdf.signatureModal.methods.type'), icon: Type },
+              { id: 'draw', label: t('pdf.signatureModal.methods.draw'), icon: Pen },
+              { id: 'upload', label: t('pdf.signatureModal.methods.upload'), icon: Upload },
+              { id: 'camera', label: t('pdf.signatureModal.methods.camera'), icon: Camera },
             ].map((item) => {
               const Icon = item.icon;
               return (
@@ -342,7 +344,7 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
                 className="rounded border-primary text-primary focus:ring-primary"
               />
               <Label htmlFor="save-signature" className="text-sm text-gray-700">
-                Save signature
+                {t('pdf.signatureModal.saveSignature')}
               </Label>
             </div>
           )}
@@ -352,19 +354,19 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
             <div className="space-y-4">
               <div>
                 <Label htmlFor="signature-name" className="text-sm font-medium">
-                  Name
+                  {t('pdf.signatureModal.name')}
                 </Label>
                 <Input
                   id="signature-name"
                   value={signatureName}
                   onChange={(e) => setSignatureName(e.target.value)}
                   className="mt-1"
-                  placeholder="Enter your name"
+                  placeholder={t('pdf.signatureModal.enterYourName')}
                 />
               </div>
               
               <div>
-                <Label className="text-sm font-medium">Color</Label>
+                <Label className="text-sm font-medium">{t('pdf.signatureModal.color')}</Label>
                 <div className="flex space-x-2 mt-2">
                   {colors.map((color) => (
                     <button
@@ -380,7 +382,7 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
               </div>
 
               <div>
-                <Label className="text-sm font-medium">Style</Label>
+                <Label className="text-sm font-medium">{t('pdf.signatureModal.style')}</Label>
                 <div className="grid grid-cols-2 gap-2 mt-2">
                   {fonts.map((font, index) => (
                     <button
@@ -413,7 +415,7 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
               {/* Saved Signature */}
               {savedSignature && (
                 <div>
-                  <Label className="text-sm font-medium">Saved Signature</Label>
+                  <Label className="text-sm font-medium">{t('pdf.signatureModal.savedSignature')}</Label>
                   <div className="mt-2">
                     <button
                       onClick={() => {
@@ -422,14 +424,14 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
                       }}
                       className="p-2 border border-border rounded-lg hover:bg-primary/5 transition-colors w-full"
                     >
-                      <img src={savedSignature} alt="Saved signature" className="w-full h-12 object-contain" />
+                      <img src={savedSignature} alt={t('pdf.signatureModal.savedSignatureAlt')} className="w-full h-12 object-contain" />
                     </button>
                   </div>
                 </div>
               )}
               
               <div>
-                <Label className="text-sm font-medium">Draw your signature</Label>
+                <Label className="text-sm font-medium">{t('pdf.signatureModal.drawYourSignature')}</Label>
                 <div className="border border-border rounded-lg mt-2 bg-card">
                   <canvas
                     ref={signaturePadRef}
@@ -455,16 +457,16 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
                     className="text-xs"
                   >
                     <Trash2 className="h-3 w-3 mr-1" />
-                    Clear
+                    {t('pdf.signatureModal.clear')}
                   </Button>
                   <span className="text-xs text-muted-foreground">
-                    {hasDrawnSignature ? 'Signature drawn' : 'Draw your signature above'}
+                    {hasDrawnSignature ? t('pdf.signatureModal.signatureDrawn') : t('pdf.signatureModal.drawAbove')}
                   </span>
                 </div>
               </div>
               
               <div>
-                <Label className="text-sm font-medium">Color</Label>
+                <Label className="text-sm font-medium">{t('pdf.signatureModal.color')}</Label>
                 <div className="flex space-x-2 mt-2">
                   {colors.map((color) => (
                     <button
@@ -484,7 +486,7 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
           {method === 'upload' && (
             <div className="space-y-4">
               <div>
-                <Label className="text-sm font-medium">Upload signature image</Label>
+                <Label className="text-sm font-medium">{t('pdf.signatureModal.uploadSignatureImage')}</Label>
                 <div className="mt-2">
                   <input
                     ref={fileInputRef}
@@ -499,14 +501,14 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
                     className="w-full"
                   >
                     <Upload className="h-4 w-4 mr-2" />
-                    Choose File
+                    {t('pdf.signatureModal.chooseFile')}
                   </Button>
                 </div>
                 {uploadedImage && (
                   <div className="mt-4">
                     <img
                       src={uploadedImage}
-                      alt="Uploaded signature"
+                      alt={t('pdf.signatureModal.uploadedSignatureAlt')}
                       className="max-w-full h-32 object-contain border rounded"
                     />
                   </div>
@@ -518,19 +520,19 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
           {method === 'camera' && (
             <div className="text-center py-8">
               <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">Camera functionality coming soon</p>
+              <p className="text-gray-600">{t('pdf.signatureModal.cameraComingSoon')}</p>
             </div>
           )}
 
           {/* Legal Disclaimer */}
           <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded">
-            This application does not guarantee that the signature provided through this tool is legally binding.
+            {t('pdf.signatureModal.legalDisclaimer')}
           </div>
 
           {/* Action Buttons */}
           <div className="flex justify-end space-x-3">
             <Button variant="outline" onClick={handleClose}>
-              Cancel
+              {t('pdf.signatureModal.cancel')}
             </Button>
             <Button
               onClick={handleSave}
@@ -538,7 +540,7 @@ const SignatureModal: React.FC<SignatureModalProps> = ({
               className="bg-primary hover:bg-primary/90"
             >
               <Check className="h-4 w-4 mr-2" />
-              Add to Document
+              {t('pdf.signatureModal.addToDocument')}
             </Button>
           </div>
         </div>

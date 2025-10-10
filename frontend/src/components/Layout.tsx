@@ -2,6 +2,7 @@ import React, { useState, useCallback } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useTranslation } from "../hooks/useTranslation";
+import { useLanguage } from "../contexts/LanguageContext";
 import { apiService } from "../services/api";
 import { Button } from "./ui/button";
 import {
@@ -38,7 +39,11 @@ const Layout: React.FC = () => {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { t } = useTranslation();
+  const { isRTL } = useLanguage();
   const [, setTimeRemaining] = useState<string>("");
+  const displayName = user?.firstName
+    ? `${user.firstName} ${user.lastName ?? ''}`.trim()
+    : (user?.username || user?.email || t('nav.myProfile'));
   // Determine account type (default to Free)
   const accountType = user?.role ? user.role : "Free";
   // custom dropdown state for user menu
@@ -148,12 +153,12 @@ const Layout: React.FC = () => {
 
   return (
     <TooltipProvider>
-      <div className="flex h-screen bg-background">
+      <div className={`flex h-screen bg-background ${isRTL ? 'flex-row-reverse' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
         {/* Sidebar */}
         <div
           className={`${
             isCollapsed ? "w-16" : "w-64"
-          } bg-card border-r border-border flex flex-col transition-all duration-500 ease-in-out relative`}
+          } bg-card ${isRTL ? 'border-l' : 'border-r'} border-border flex flex-col transition-all duration-500 ease-in-out relative`}
         >
           {/* Header with Logo and Toggle */}
           <div className="p-6 border-b border-border">
@@ -164,7 +169,7 @@ const Layout: React.FC = () => {
                 </div>
                 {!isCollapsed && (
                   <div className="transition-opacity duration-500 text-center">
-                    <h1 className="text-lg font-semibold text-slate-900">SignMeNow</h1>
+                    <h1 className="text-lg font-semibold text-slate-900">{t('common.signMeNow')}</h1>
                     {/* <p className="text-xs text-slate-600">
                       E-Signature Platform
                     </p> */}
@@ -241,7 +246,7 @@ const Layout: React.FC = () => {
                         <p>{item.name}</p>
                         {item.badge && (
                           <p className="text-xs text-muted-foreground">
-                            {item.badge} items
+                            {item.badge} {t('common.items')}
                           </p>
                         )}
                       </TooltipContent>
@@ -257,7 +262,7 @@ const Layout: React.FC = () => {
           {/* Profile Navigation */}
           <div className="px-3 py-2 border-t border-border">
             <div className="text-xs font-medium text-slate-600 mb-2 px-3">
-              {!isCollapsed && "Profile"}
+              {!isCollapsed && t('settings.profile')}
             </div>
             <nav className="space-y-1">
               {profileNavigation.map((item) => {
@@ -321,7 +326,7 @@ const Layout: React.FC = () => {
                     <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover" onError={() => setImgBroken(true)} />
                   ) : (
                     <div className={`w-full h-full flex items-center justify-center bg-transparent text-primary font-semibold ${isCollapsed ? 'text-xs' : 'text-sm'}`}>
-                      {getInitials(user?.name || "Hedayat Farahi")}
+                      {getInitials((user?.firstName ? `${user.firstName} ${user.lastName ?? ''}`.trim() : (user?.username || user?.email || 'User')))}
                     </div>
                   )}
                 </div>
@@ -329,9 +334,9 @@ const Layout: React.FC = () => {
                 {!isCollapsed && (
                   <div className="flex-1 min-w-0 flex items-center justify-between">
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold truncate text-slate-900">Hedayat Farahi</p>
+                      <p className="text-sm font-semibold truncate text-slate-900">{displayName}</p>
                       {/* <p className="text-xs truncate text-slate-600">{accountType}</p> */}
-                      <p className="text-xs truncate text-slate-600">Free</p>
+                      <p className="text-xs truncate text-slate-600">{t('common.free')}</p>
                     </div>
                     <ChevronUp className={`h-4 w-4 text-slate-500 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`} />
                   </div>
@@ -342,23 +347,23 @@ const Layout: React.FC = () => {
               {userMenuOpen && (
                 <div className={`absolute ${isCollapsed ? 'left-1/2 transform -translate-x-1/2 w-56' : 'left-0 w-64'} bottom-full mb-2 rounded-xl border border-border bg-card p-2 shadow-xl z-50 text-sm`}>
                   <div className="px-4 py-3 bg-accent/10 rounded-lg mb-2">
-                    <p className="text-sm font-semibold text-slate-900 truncate">Hedayat Farahi</p>
-                    <p className="text-xs text-slate-600 truncate">{user?.email || 'hedayat@example.com'}</p>
+                    <p className="text-sm font-semibold text-slate-900 truncate">{displayName}</p>
+                    <p className="text-xs text-slate-600 truncate">{user?.email || 'user@example.com'}</p>
                   </div>
                   <button className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-primary/5 hover:text-foreground text-sm transition-colors" onClick={() => { navigate('/app/profile'); setUserMenuOpen(false); }}>
-                    <div className="flex items-center gap-3"><User className="h-4 w-4 text-slate-500"/><span className="font-medium text-slate-700">Profile</span></div>
+                    <div className="flex items-center gap-3"><User className="h-4 w-4 text-slate-500"/><span className="font-medium text-slate-700">{t('nav.myProfile')}</span></div>
                   </button>
                   {accountType === 'Free' && (
                     <button className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-primary/5 hover:text-foreground text-sm transition-colors" onClick={() => { /* upgrade */ setUserMenuOpen(false); }}>
-                      <div className="flex items-center gap-3"><CreditCard className="h-4 w-4 text-slate-500"/><span className="font-medium text-slate-700">Upgrade plan</span></div>
+                      <div className="flex items-center gap-3"><CreditCard className="h-4 w-4 text-slate-500"/><span className="font-medium text-slate-700">{t('common.upgradePlan')}</span></div>
                     </button>
                   )}
                   <button className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-primary/5 hover:text-foreground text-sm transition-colors" onClick={() => { navigate('/app/settings'); setUserMenuOpen(false); }}>
-                    <div className="flex items-center gap-3"><Settings className="h-4 w-4 text-slate-500"/><span className="font-medium text-slate-700">Settings</span></div>
+                    <div className="flex items-center gap-3"><Settings className="h-4 w-4 text-slate-500"/><span className="font-medium text-slate-700">{t('nav.settings')}</span></div>
                   </button>
                   <div className="h-px bg-border my-2" />
                   <button className="w-full text-left px-3 py-2.5 rounded-lg text-destructive hover:bg-destructive/10 text-sm transition-colors" onClick={() => { handleLogout(); setUserMenuOpen(false); }}>
-                    <div className="flex items-center gap-3"><LogOut className="h-4 w-4 text-red-500"/><span className="font-medium">Log out</span></div>
+                    <div className="flex items-center gap-3"><LogOut className="h-4 w-4 text-red-500"/><span className="font-medium">{t('common.logout')}</span></div>
                   </button>
                 </div>
               )}

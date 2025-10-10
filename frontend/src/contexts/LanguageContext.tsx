@@ -2,7 +2,8 @@ import React, {
   createContext,
   useContext,
   useState,
-  useEffect,
+  useMemo,
+  useCallback,
   ReactNode,
 } from "react";
 import { setLanguage, getLanguage } from "../i18n";
@@ -11,6 +12,7 @@ interface LanguageContextType {
   currentLanguage: string;
   changeLanguage: (language: string) => void;
   availableLanguages: { code: string; name: string; flag: string; flagUrl: string }[];
+  isRTL: boolean;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
@@ -29,26 +31,45 @@ interface LanguageProviderProps {
   children: ReactNode;
 }
 
+// Static arrays defined outside component to prevent recreation
+const rtlLanguages = ["ar", "dr", "ps"];
+
+const availableLanguages = [
+  { code: "en", name: "English", flag: "🇺🇸", flagUrl: "https://flagcdn.com/w20/us.png" },
+  { code: "de", name: "Deutsch", flag: "🇩🇪", flagUrl: "https://flagcdn.com/w20/de.png" },
+  { code: "ro", name: "Română", flag: "🇷🇴", flagUrl: "https://flagcdn.com/w20/ro.png" },
+  { code: "fr", name: "Français", flag: "🇫🇷", flagUrl: "https://flagcdn.com/w20/fr.png" },
+  { code: "es", name: "Español", flag: "🇪🇸", flagUrl: "https://flagcdn.com/w20/es.png" },
+  { code: "it", name: "Italiano", flag: "🇮🇹", flagUrl: "https://flagcdn.com/w20/it.png" },
+  { code: "pt", name: "Português", flag: "🇵🇹", flagUrl: "https://flagcdn.com/w20/pt.png" },
+  { code: "nl", name: "Nederlands", flag: "🇳🇱", flagUrl: "https://flagcdn.com/w20/nl.png" },
+  { code: "sv", name: "Svenska", flag: "🇸🇪", flagUrl: "https://flagcdn.com/w20/se.png" },
+  { code: "ru", name: "Русский", flag: "🇷🇺", flagUrl: "https://flagcdn.com/w20/ru.png" },
+  { code: "zh", name: "中文", flag: "🇨🇳", flagUrl: "https://flagcdn.com/w20/cn.png" },
+  { code: "ja", name: "日本語", flag: "🇯🇵", flagUrl: "https://flagcdn.com/w20/jp.png" },
+  { code: "dr", name: "دری", flag: "🇦🇫", flagUrl: "https://flagcdn.com/w20/af.png" },
+  { code: "ps", name: "پښتو", flag: "🇦🇫", flagUrl: "https://flagcdn.com/w20/af.png" },
+  { code: "ar", name: "العربية", flag: "🇸🇦", flagUrl: "https://flagcdn.com/w20/sa.png" },
+];
+
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({
   children,
 }) => {
   const [currentLanguage, setCurrentLanguage] = useState<string>(getLanguage());
 
-  const availableLanguages = [
-    { code: "en", name: "English", flag: "🇺🇸", flagUrl: "https://flagcdn.com/w20/us.png" },
-    { code: "de", name: "Deutsch", flag: "🇩🇪", flagUrl: "https://flagcdn.com/w20/de.png" },
-  ];
-
-  const changeLanguage = (language: string) => {
+  const changeLanguage = useCallback((language: string) => {
     setLanguage(language);
-    setCurrentLanguage(language);
-  };
+    setCurrentLanguage(language); // Update immediately
+  }, []);
 
-  const value: LanguageContextType = {
+  const isRTL = useMemo(() => rtlLanguages.includes(currentLanguage), [currentLanguage]);
+
+  const value: LanguageContextType = useMemo(() => ({
     currentLanguage,
     changeLanguage,
     availableLanguages,
-  };
+    isRTL,
+  }), [currentLanguage, isRTL]);
 
   return (
     <LanguageContext.Provider value={value}>

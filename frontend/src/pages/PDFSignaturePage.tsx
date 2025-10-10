@@ -20,11 +20,13 @@ import {
   Sparkles
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
+import { useTranslation } from '../hooks/useTranslation';
 
 const PDFSignaturePage: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useTranslation();
 
   // Main state
   const [state, setState] = useState<PDFEditorState>({
@@ -90,8 +92,8 @@ const PDFSignaturePage: React.FC = () => {
   const handleFileUpload = useCallback(async (file: File) => {
     if (file.type !== 'application/pdf') {
       toast({
-        title: "Invalid file type",
-        description: "Please upload a valid PDF file.",
+        title: t('pdf.toast.invalidFileTypeTitle'),
+        description: t('pdf.toast.invalidFileTypeDesc'),
         variant: "destructive",
       });
       return;
@@ -99,8 +101,8 @@ const PDFSignaturePage: React.FC = () => {
 
     if (file.size > 50 * 1024 * 1024) { // 50MB limit
       toast({
-        title: "File too large",
-        description: "Please upload a PDF file smaller than 50MB.",
+        title: t('pdf.toast.fileTooLargeTitle'),
+        description: t('pdf.toast.fileTooLargeDesc'),
         variant: "destructive",
       });
       return;
@@ -123,8 +125,8 @@ const PDFSignaturePage: React.FC = () => {
       setFileSize(file.size);
 
       toast({
-        title: "PDF uploaded successfully",
-        description: `File: ${file.name} (${formatFileSize(file.size)})`,
+        title: t('pdf.toast.uploadedTitle'),
+        description: `${t('pdf.upload.file')}: ${file.name} (${formatFileSize(file.size)})`,
       });
     } catch (error) {
       console.error('File upload error:', error);
@@ -135,8 +137,8 @@ const PDFSignaturePage: React.FC = () => {
       }));
       
       toast({
-        title: "Upload failed",
-        description: "There was an error loading the PDF file.",
+        title: t('pdf.toast.uploadFailedTitle'),
+        description: t('pdf.toast.uploadFailedDesc'),
         variant: "destructive",
       });
     }
@@ -193,8 +195,8 @@ const PDFSignaturePage: React.FC = () => {
     saveToHistory(updatedAnnotations);
 
     toast({
-      title: "Annotation added",
-      description: `${annotation.type} annotation has been added to the document.`,
+      title: t('pdf.toast.annotationAddedTitle'),
+      description: t('pdf.toast.annotationAddedDesc'),
     });
   }, [state.annotations, saveToHistory, toast]);
 
@@ -215,8 +217,8 @@ const PDFSignaturePage: React.FC = () => {
     }));
 
     toast({
-      title: "Annotation deleted",
-      description: "Annotation has been removed from the document.",
+      title: t('pdf.toast.annotationDeletedTitle'),
+      description: t('pdf.toast.annotationDeletedDesc'),
     });
   }, [state.annotations, saveToHistory, toast]);
 
@@ -276,8 +278,8 @@ const PDFSignaturePage: React.FC = () => {
   const handleSave = useCallback(async () => {
     if (!state.file || state.annotations.length === 0) {
       toast({
-        title: "Nothing to save",
-        description: "Please add annotations before saving.",
+        title: t('pdf.toast.nothingToSaveTitle'),
+        description: t('pdf.toast.nothingToSaveDesc'),
         variant: "destructive",
       });
       return;
@@ -299,14 +301,14 @@ const PDFSignaturePage: React.FC = () => {
       URL.revokeObjectURL(url);
 
       toast({
-        title: "PDF saved successfully",
-        description: "Your annotated PDF has been downloaded.",
+        title: t('pdf.toast.savedTitle'),
+        description: t('pdf.toast.savedDesc'),
       });
     } catch (error) {
       console.error('Save error:', error);
       toast({
-        title: "Save failed",
-        description: "There was an error saving the PDF.",
+        title: t('pdf.toast.saveFailedTitle'),
+        description: t('pdf.toast.saveFailedDesc'),
         variant: "destructive",
       });
     } finally {
@@ -422,7 +424,7 @@ const PDFSignaturePage: React.FC = () => {
         const annotation = state.annotations.find(a => a.id === state.selectedAnnotationId);
         if (annotation) {
           localStorage.setItem('copiedAnnotation', JSON.stringify(annotation));
-          toast({ title: "Annotation copied", description: "Use Ctrl+V to paste" });
+          toast({ title: t('pdf.toast.annotationCopiedTitle'), description: t('pdf.toast.annotationCopiedDesc') });
         }
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 'v' && !isInputFocused) {
@@ -443,7 +445,7 @@ const PDFSignaturePage: React.FC = () => {
           saveToHistory(updatedAnnotations);
           handleAnnotationSelect(newId);
           
-          toast({ title: "Annotation pasted", description: "Annotation has been duplicated and selected" });
+          toast({ title: t('pdf.toast.annotationPastedTitle'), description: t('pdf.toast.annotationPastedDesc') });
         }
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 'a' && !isInputFocused) {
@@ -481,7 +483,7 @@ const PDFSignaturePage: React.FC = () => {
           saveToHistory(updatedAnnotations);
           handleAnnotationSelect(newId);
           
-          toast({ title: "Annotation duplicated", description: "New annotation selected" });
+          toast({ title: t('pdf.toast.annotationDuplicatedTitle'), description: t('pdf.toast.annotationDuplicatedDesc') });
         }
       }
     };
@@ -492,22 +494,22 @@ const PDFSignaturePage: React.FC = () => {
 
   return (
     <PageWrapper
-      title={state.file ? getTruncatedFileName(fileName) : "Document Workspace"}
-      description={state.file ? formatFileSize(fileSize) : "Edit, sign, and share documents"}
+  title={state.file ? getTruncatedFileName(fileName) : t('pdf.page.workspaceTitle')}
+  description={state.file ? formatFileSize(fileSize) : t('pdf.page.workspaceDescription')}
       icon={FileText}
       actions={state.file ? (
         <Button
           variant="outline"
           onClick={() => {
             toast({
-              title: "AI Analysis",
-              description: "AI document analysis feature coming soon!",
+              title: t('pdf.page.aiAnalysisTitle'),
+              description: t('pdf.page.aiAnalysisComingSoon'),
             });
           }}
           className="flex items-center gap-2"
         >
           <Sparkles className="h-4 w-4" />
-          Analyze with AI
+          {t('pdf.page.analyzeWithAI')}
         </Button>
       ) : undefined}
     >
@@ -532,13 +534,13 @@ const PDFSignaturePage: React.FC = () => {
               </div>
               
               <h2 className="text-3xl font-bold text-foreground mb-4">
-                {isDragOver ? 'Drop PDF Here' : 'Upload PDF Document'}
+                {isDragOver ? t('pdf.upload.dropHere') : t('pdf.upload.uploadDocument')}
               </h2>
               
               <p className="text-muted-foreground mb-8 text-lg leading-relaxed">
                 {isDragOver 
-                  ? 'Release to upload your PDF document'
-                  : 'Drag and drop your PDF file here, or click to browse and upload'
+                  ? t('pdf.upload.releaseToUpload')
+                  : t('pdf.upload.dragDropOrBrowse')
                 }
               </p>
               
@@ -548,7 +550,7 @@ const PDFSignaturePage: React.FC = () => {
                 disabled={isDragOver}
               >
                 <Upload className="h-5 w-5 mr-3" />
-                Choose PDF File
+                {t('pdf.upload.chooseFile')}
               </button>
 
               <input
@@ -566,15 +568,15 @@ const PDFSignaturePage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-muted-foreground">
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 bg-primary rounded-full" />
-                    <span>Digital signatures & annotations</span>
+                    <span>{t('pdf.features.signaturesAnnotations')}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 bg-primary rounded-full" />
-                    <span>Text, shapes, and form fields</span>
+                    <span>{t('pdf.features.textShapesForms')}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 bg-primary rounded-full" />
-                    <span>Intelligent A.I document analysis</span>
+                    <span>{t('pdf.features.intelligentAiAnalysis')}</span>
                   </div>
                 </div>
               </div>
@@ -653,7 +655,7 @@ const PDFSignaturePage: React.FC = () => {
                   const annotation = state.annotations.find(a => a.id === state.selectedAnnotationId);
                   if (annotation) {
                     localStorage.setItem('copiedAnnotation', JSON.stringify(annotation));
-                    toast({ title: "Annotation copied" });
+                    toast({ title: t('pdf.toast.annotationCopiedTitle') });
                   }
                 }
               }}
@@ -663,7 +665,7 @@ const PDFSignaturePage: React.FC = () => {
                   if (annotation) {
                     localStorage.setItem('copiedAnnotation', JSON.stringify(annotation));
                     handleAnnotationDelete(state.selectedAnnotationId);
-                    toast({ title: "Annotation cut" });
+                    toast({ title: t('pdf.toast.annotationCutTitle') });
                   }
                 }
               }}
@@ -678,33 +680,33 @@ const PDFSignaturePage: React.FC = () => {
                     zIndex: state.annotations.length + 1,
                   };
                   handleAnnotationAdd(newAnnotation);
-                  toast({ title: "Annotation pasted" });
+                  toast({ title: t('pdf.toast.annotationPastedTitle') });
                 }
               }}
               onLock={() => {
                 if (state.selectedAnnotationId) {
                   const annotation = state.annotations.find(a => a.id === state.selectedAnnotationId);
                   handleAnnotationUpdate(state.selectedAnnotationId, { locked: !annotation?.locked });
-                  toast({ title: annotation?.locked ? "Annotation unlocked" : "Annotation locked" });
+                  toast({ title: annotation?.locked ? t('pdf.toast.annotationUnlockedTitle') : t('pdf.toast.annotationLockedTitle') });
                 }
               }}
               onHide={() => {
                 if (state.selectedAnnotationId) {
                   const annotation = state.annotations.find(a => a.id === state.selectedAnnotationId);
                   handleAnnotationUpdate(state.selectedAnnotationId, { hidden: !annotation?.hidden });
-                  toast({ title: annotation?.hidden ? "Annotation shown" : "Annotation hidden" });
+                  toast({ title: annotation?.hidden ? t('pdf.toast.annotationShownTitle') : t('pdf.toast.annotationHiddenTitle') });
                 }
               }}
               onFlipH={() => {
                 if (state.selectedAnnotationId) {
                   handleAnnotationUpdate(state.selectedAnnotationId, { flippedH: true });
-                  toast({ title: "Annotation flipped horizontally" });
+                  toast({ title: t('pdf.toast.annotationFlippedHTitle') });
                 }
               }}
               onFlipV={() => {
                 if (state.selectedAnnotationId) {
                   handleAnnotationUpdate(state.selectedAnnotationId, { flippedV: true });
-                  toast({ title: "Annotation flipped vertically" });
+                  toast({ title: t('pdf.toast.annotationFlippedVTitle') });
                 }
               }}
               onRotateLeft={() => {
@@ -726,15 +728,15 @@ const PDFSignaturePage: React.FC = () => {
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
                   <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-                  <div className="text-muted-foreground">Opening your document...</div>
+                  <div className="text-muted-foreground">{t('pdf.viewer.opening')}</div>
                 </div>
               </div>
             ) : state.error ? (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
                   <AlertCircle className="h-8 w-8 mx-auto mb-4 text-destructive" />
-                  <div className="text-destructive text-lg mb-2">Couldn't open document</div>
-                  <div className="text-muted-foreground">Please try uploading your PDF again</div>
+                  <div className="text-destructive text-lg mb-2">{t('pdf.viewer.couldntOpen')}</div>
+                  <div className="text-muted-foreground">{t('pdf.viewer.tryUploadingAgain')}</div>
                 </div>
               </div>
             ) : (
@@ -746,7 +748,7 @@ const PDFSignaturePage: React.FC = () => {
                 }}
                 onLoadError={(error) => {
                   console.error('PDF load error:', error);
-                  setState(prev => ({ ...prev, error: 'Failed to load PDF' }));
+                  setState(prev => ({ ...prev, error: t('pdf.viewer.loadError') }));
                 }}
                 onPageClick={(event, pageNumber) => {
                   // Handle page clicks for annotation placement or deselection
@@ -810,7 +812,7 @@ const PDFSignaturePage: React.FC = () => {
           setIsSignatureModalOpen(false);
           setPendingSignaturePosition(null);
         }}
-        onSignatureCreate={(signatureData, type) => {
+  onSignatureCreate={(signatureData, type) => {
           // Get current viewport center if no pending position
           let x = 100;
           let y = 100;
@@ -841,6 +843,8 @@ const PDFSignaturePage: React.FC = () => {
             }
           }
           
+          const mappedSignatureType: 'text' | 'draw' | 'image' =
+            type === 'type' ? 'text' : type === 'upload' ? 'image' : 'draw';
           const newAnnotation: Omit<PDFAnnotation, 'id'> = {
             type: 'signature',
             x,
@@ -852,7 +856,7 @@ const PDFSignaturePage: React.FC = () => {
             pageNumber: pendingSignaturePosition?.pageNumber || state.currentPage,
             style: { ...getDefaultStyle('signature'), borderWidth: 0, borderColor: 'transparent' },
             zIndex: state.annotations.length + 1,
-            signatureType: type,
+            signatureType: mappedSignatureType,
           };
           
           console.log('Adding signature annotation:', newAnnotation);

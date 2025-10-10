@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { configurePDFJS } from "../utils/pdfjsConfig";
 import SimplePDFViewerFallback from "./SimplePDFViewerFallback";
 import EnhancedPDFOverlay from "./EnhancedPDFOverlay";
+import { useTranslation } from "../hooks/useTranslation";
 
 interface SignaturePosition {
   id: string;
@@ -115,6 +116,7 @@ const HighQualityPDFViewer: React.FC<HighQualityPDFViewerProps> = ({
   onDeleteElement,
   currentTool,
 }) => {
+  const { t } = useTranslation();
   const [pdfDoc, setPdfDoc] = useState<any | null>(null);
   const [numPages, setNumPages] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
@@ -619,7 +621,7 @@ const HighQualityPDFViewer: React.FC<HighQualityPDFViewerProps> = ({
                       />
                     ) : (
                       <div className="w-[120px] h-[160px] flex items-center justify-center text-xs text-neutral-400">
-                        Loading...
+                        {t("common.loading")}
                       </div>
                     )}
                   </div>

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { 
   Copy, RotateCw, Trash2, Minus, Plus, Scissors, RotateCcw, Type, Bold, Italic, Underline
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface AnnotationEditToolbarProps {
   annotation: any;
@@ -42,6 +44,7 @@ const AnnotationEditToolbar: React.FC<AnnotationEditToolbarProps> = ({
   onRotateLeft = () => {},
   onAlign = () => {},
 }) => {
+  const { t } = useTranslation();
   const [showStrokePicker, setShowStrokePicker] = useState(false);
   const [showFillPicker, setShowFillPicker] = useState(false);
   const [showTextStrokePicker, setShowTextStrokePicker] = useState(false);
@@ -62,7 +65,15 @@ const AnnotationEditToolbar: React.FC<AnnotationEditToolbarProps> = ({
   const currentStrokeColor = annotation.style?.[annotation.type === 'line' ? 'color' : 'borderColor'] || '#000000';
   const currentFillColor = annotation.style?.backgroundColor || 'transparent';
 
-  const ToolButton = ({ icon: Icon, label, onClick, active = false, className = "" }) => (
+  type ToolButtonProps = {
+    icon: LucideIcon;
+    label: string;
+    onClick: () => void;
+    active?: boolean;
+    className?: string;
+  };
+
+  const ToolButton: React.FC<ToolButtonProps> = ({ icon: Icon, label, onClick, active = false, className = "" }) => (
     <button
       onClick={onClick}
       className={`flex flex-col items-center gap-1 px-2 py-1.5 rounded-md transition-all duration-200 ${
@@ -77,9 +88,19 @@ const AnnotationEditToolbar: React.FC<AnnotationEditToolbarProps> = ({
     </button>
   );
 
-  const NumberControl = ({ label, value, onChange, min = 0, max = 100, step = 1, unit = "" }) => (
+  type NumberControlProps = {
+    label: string;
+    value: number;
+    onChange: (value: number) => void;
+    min?: number;
+    max?: number;
+    step?: number;
+    unit?: string;
+  };
+
+  const NumberControl: React.FC<NumberControlProps> = ({ label, value, onChange, min = 0, max = 100, step = 1, unit = "" }) => (
     <div className="flex flex-col items-center gap-1">
-      <span className="text-xs font-medium text-gray-600">{label}</span>
+  <span className="text-xs font-medium text-gray-600">{label}</span>
       <div className="flex items-center bg-white border border-gray-200 rounded-md">
         <button
           onClick={() => onChange(Math.max(min, value - step))}
@@ -106,7 +127,16 @@ const AnnotationEditToolbar: React.FC<AnnotationEditToolbarProps> = ({
     </div>
   );
 
-  const ColorControl = ({ label, color, onChange, showPicker, setShowPicker, allowTransparent = false }) => (
+  type ColorControlProps = {
+    label: string;
+    color: string;
+    onChange: (color: string) => void;
+    showPicker: boolean;
+    setShowPicker: (value: boolean) => void;
+    allowTransparent?: boolean;
+  };
+
+  const ColorControl: React.FC<ColorControlProps> = ({ label, color, onChange, showPicker, setShowPicker, allowTransparent = false }) => (
     <div className="flex flex-col items-center gap-1">
       <span className="text-xs font-medium text-gray-600">{label}</span>
       <div className="relative">
@@ -194,18 +224,18 @@ const AnnotationEditToolbar: React.FC<AnnotationEditToolbarProps> = ({
       <div className="px-4 py-3 flex items-center gap-4">
         {/* Edit Actions */}
         <div className="flex items-center gap-2">
-          <ToolButton icon={Copy} label="Copy" onClick={onCopy} />
-          <ToolButton icon={Scissors} label="Cut" onClick={onCut} />
-          <ToolButton icon={Copy} label="Paste" onClick={onPaste} />
-          <ToolButton icon={Copy} label="Duplicate" onClick={onDuplicate} />
+          <ToolButton icon={Copy} label={t('pdf.edit.copy')} onClick={onCopy} />
+          <ToolButton icon={Scissors} label={t('pdf.edit.cut')} onClick={onCut} />
+          <ToolButton icon={Copy} label={t('pdf.edit.paste')} onClick={onPaste} />
+          <ToolButton icon={Copy} label={t('pdf.edit.duplicate')} onClick={onDuplicate} />
         </div>
 
         <div className="w-px h-8 bg-gray-200" />
 
         {/* Transform Actions */}
         <div className="flex items-center gap-2">
-          <ToolButton icon={RotateCcw} label="Rotate L" onClick={onRotateLeft} />
-          <ToolButton icon={RotateCw} label="Rotate R" onClick={onRotate} />
+          <ToolButton icon={RotateCcw} label={t('pdf.edit.rotateL')} onClick={onRotateLeft} />
+          <ToolButton icon={RotateCw} label={t('pdf.edit.rotateR')} onClick={onRotate} />
         </div>
 
         <div className="w-px h-8 bg-gray-200" />
@@ -217,9 +247,9 @@ const AnnotationEditToolbar: React.FC<AnnotationEditToolbarProps> = ({
             <>
               {/* Font Size */}
               <NumberControl
-                label="Font Size"
+                label={t('pdf.edit.fontSize')}
                 value={annotation.style?.fontSize || 14}
-                onChange={(value) => onStyleUpdate({
+                onChange={(value: number) => onStyleUpdate({
                   style: { ...annotation.style, fontSize: value }
                 })}
                 min={8}
@@ -231,7 +261,7 @@ const AnnotationEditToolbar: React.FC<AnnotationEditToolbarProps> = ({
               <div className="flex items-center gap-1">
                 <ToolButton 
                   icon={Bold} 
-                  label="Bold" 
+                  label={t('pdf.edit.bold')} 
                   active={annotation.style?.fontWeight === 'bold'}
                   onClick={() => onStyleUpdate({
                     style: { 
@@ -242,7 +272,7 @@ const AnnotationEditToolbar: React.FC<AnnotationEditToolbarProps> = ({
                 />
                 <ToolButton 
                   icon={Italic} 
-                  label="Italic" 
+                  label={t('pdf.edit.italic')} 
                   active={annotation.style?.fontStyle === 'italic'}
                   onClick={() => onStyleUpdate({
                     style: { 
@@ -255,9 +285,9 @@ const AnnotationEditToolbar: React.FC<AnnotationEditToolbarProps> = ({
               
               {/* Text Color */}
               <ColorControl
-                label="Text Color"
+                label={t('pdf.edit.textColor')}
                 color={annotation.style?.color || '#000000'}
-                onChange={(color) => onStyleUpdate({
+                onChange={(color: string) => onStyleUpdate({
                   style: { ...annotation.style, color }
                 })}
                 showPicker={showTextStrokePicker}
@@ -266,9 +296,9 @@ const AnnotationEditToolbar: React.FC<AnnotationEditToolbarProps> = ({
               
               {/* Background Color */}
               <ColorControl
-                label="Background"
+                label={t('pdf.edit.background')}
                 color={annotation.style?.backgroundColor || 'transparent'}
-                onChange={(color) => onStyleUpdate({
+                onChange={(color: string) => onStyleUpdate({
                   style: { ...annotation.style, backgroundColor: color }
                 })}
                 showPicker={showTextFillPicker}
@@ -278,9 +308,9 @@ const AnnotationEditToolbar: React.FC<AnnotationEditToolbarProps> = ({
               
               {/* Border Color */}
               <ColorControl
-                label="Border"
+                label={t('pdf.edit.border')}
                 color={annotation.style?.borderColor || 'transparent'}
-                onChange={(color) => onStyleUpdate({
+                onChange={(color: string) => onStyleUpdate({
                   style: { ...annotation.style, borderColor: color }
                 })}
                 showPicker={showTextBorderPicker}
@@ -290,9 +320,9 @@ const AnnotationEditToolbar: React.FC<AnnotationEditToolbarProps> = ({
               
               {/* Border Width */}
               <NumberControl
-                label="Border Width"
+                label={t('pdf.edit.borderWidth')}
                 value={annotation.style?.borderWidth || 0}
-                onChange={(value) => onStyleUpdate({
+                onChange={(value: number) => onStyleUpdate({
                   style: { ...annotation.style, borderWidth: value }
                 })}
                 min={0}
@@ -307,9 +337,9 @@ const AnnotationEditToolbar: React.FC<AnnotationEditToolbarProps> = ({
             <>
               {/* Stroke Color */}
               <ColorControl
-                label="Stroke"
+                label={t('pdf.edit.stroke')}
                 color={currentStrokeColor}
-                onChange={(color) => onStyleUpdate({
+                onChange={(color: string) => onStyleUpdate({
                   style: {
                     ...annotation.style,
                     [annotation.type === 'line' ? 'color' : 'borderColor']: color
@@ -323,9 +353,9 @@ const AnnotationEditToolbar: React.FC<AnnotationEditToolbarProps> = ({
               {/* Stroke Size */}
               {(annotation.type === 'line' || annotation.type === 'shape' || annotation.type === 'rectangle') && (
                 <NumberControl
-                  label="Stroke Size"
+                  label={t('pdf.edit.strokeSize')}
                   value={currentBorderWidth}
-                  onChange={(value) => onStyleUpdate({
+                  onChange={(value: number) => onStyleUpdate({
                     style: { ...annotation.style, borderWidth: value }
                   })}
                   min={1}
@@ -337,9 +367,9 @@ const AnnotationEditToolbar: React.FC<AnnotationEditToolbarProps> = ({
               {/* Fill Color */}
               {(annotation.type === 'shape' || annotation.type === 'rectangle') && (
                 <ColorControl
-                  label="Fill"
+                  label={t('pdf.edit.fill')}
                   color={currentFillColor}
-                  onChange={(color) => onStyleUpdate({
+                  onChange={(color: string) => onStyleUpdate({
                     style: { ...annotation.style, backgroundColor: color }
                   })}
                   showPicker={showFillPicker}
@@ -358,7 +388,7 @@ const AnnotationEditToolbar: React.FC<AnnotationEditToolbarProps> = ({
         {/* Delete Action - Far Right */}
         <ToolButton 
           icon={Trash2} 
-          label="Delete" 
+          label={t('pdf.edit.delete')} 
           onClick={onDelete} 
           className="text-red-500 hover:text-red-600 hover:bg-red-50" 
         />
@@ -369,13 +399,13 @@ const AnnotationEditToolbar: React.FC<AnnotationEditToolbarProps> = ({
         <div className="border-t border-gray-100 px-4 py-3 bg-gray-50">
           <div className="flex items-center gap-2 mb-2">
             <Type className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-gray-700">Text Content</span>
+            <span className="text-sm font-medium text-gray-700">{t('pdf.edit.textContent')}</span>
           </div>
           <textarea
             value={annotation.content || ''}
             onChange={(e) => onStyleUpdate({ content: e.target.value })}
             className="w-full text-sm border border-gray-200 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary resize-none bg-white"
-            placeholder="Enter your text here..."
+            placeholder={t('pdf.edit.enterTextHere')}
             rows={3}
             style={{ minHeight: '60px' }}
           />

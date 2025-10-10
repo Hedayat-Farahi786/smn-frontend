@@ -113,7 +113,8 @@ const DropdownMenuContent: React.FC<DropdownMenuContentProps> = ({
   return (
     <div
       className={cn(
-        "absolute top-full z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95",
+        "absolute top-full z-50 min-w-[8rem] max-h-[400px] overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95",
+        "[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]",
         alignmentClasses[align],
         className
       )}

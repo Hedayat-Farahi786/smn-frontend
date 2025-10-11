@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { useTranslation } from "../hooks/useTranslation";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "../contexts/ThemeContext";
+import { useAppDispatch } from "../store/hooks";
+import { loginUser } from "../store/slices/authSlice";
 import { 
   Mail, 
   ArrowRight, 
@@ -20,7 +22,11 @@ import {
   Users,
   TrendingUp,
   Award,
-  ChevronDown
+  ChevronDown,
+  Building2,
+  FileText,
+  Check,
+  CircleCheckBig
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import {
@@ -40,6 +46,7 @@ const LoginPage: React.FC = () => {
   const { t } = useTranslation();
   const { currentLanguage, changeLanguage, availableLanguages, isRTL } = useLanguage();
   const { theme, setTheme, actualTheme } = useTheme();
+  const dispatch = useAppDispatch();
 
   const currentLang = availableLanguages.find(
     (lang) => lang.code === currentLanguage
@@ -184,255 +191,122 @@ const LoginPage: React.FC = () => {
       <div className="grid lg:grid-cols-2 min-h-screen">
         {/* Left Side - Enhanced Visual/Brand Section */}
         <div className="hidden lg:flex flex-col justify-center items-center bg-gradient-to-br from-brand-primary/5 via-brand-accent/5 to-teal-50/50 dark:from-brand-primary/10 dark:via-brand-accent/10 dark:to-gray-800 relative overflow-hidden p-12">
-          {/* Animated Background Elements */}
+          {/* Animated Background Elements - More Subtle */}
           <motion.div
-            className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-primary/10 dark:bg-brand-primary/20 rounded-full blur-3xl"
+            className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-primary/5 dark:bg-brand-primary/10 rounded-full blur-3xl"
             animate={{
-              x: [-30, 30, -30],
-              y: [-30, 30, -30],
-              scale: [1, 1.2, 1],
+              x: [-20, 20, -20],
+              y: [-20, 20, -20],
+              scale: [1, 1.1, 1],
             }}
-            transition={{ duration: 20, repeat: Infinity, repeatType: "reverse" }}
+            transition={{ duration: 30, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
           />
           <motion.div
-            className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-brand-accent/10 dark:bg-brand-accent/20 rounded-full blur-3xl"
+            className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-brand-accent/5 dark:bg-brand-accent/10 rounded-full blur-3xl"
             animate={{
-              x: [30, -30, 30],
-              y: [30, -30, 30],
+              x: [20, -20, 20],
+              y: [20, -20, 20],
+              scale: [1, 1.08, 1],
+            }}
+            transition={{ duration: 35, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-teal-200/10 dark:bg-teal-500/5 rounded-full blur-3xl"
+            animate={{
               scale: [1, 1.15, 1],
+              opacity: [0.2, 0.3, 0.2],
             }}
-            transition={{ duration: 25, repeat: Infinity, repeatType: "reverse" }}
-          />
-          <motion.div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-teal-200/20 dark:bg-teal-500/10 rounded-full blur-3xl"
-            animate={{
-              scale: [1, 1.3, 1],
-              opacity: [0.3, 0.5, 0.3],
-            }}
-            transition={{ duration: 15, repeat: Infinity, repeatType: "reverse" }}
+            transition={{ duration: 25, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
           />
 
           {/* Vertical Divider Line */}
           <div className="absolute top-0 bottom-0 right-0 w-px bg-gradient-to-b from-transparent via-gray-200 dark:via-gray-700 to-transparent pointer-events-none z-20"></div>
 
-          <div className="relative z-10 max-w-lg">
-            {/* Enhanced Multi-Feature Illustration */}
+          <div className="relative z-10 max-w-lg mx-auto flex flex-col items-center justify-center">
+            {/* Hero Visual - Document Signing Illustration (from Landing Page) */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="mb-8"
+              initial={{ x: 50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.8 }}
+              className="relative mb-8"
             >
-              <div className="relative w-full max-w-md mx-auto">
-                {/* Main Document Card - Enhanced with AI & Signature */}
+              <div className="relative w-full max-w-md mx-auto h-[450px] flex items-center justify-center">
+                {/* Main Document - This is the parent for all floating badges */}
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.2, duration: 0.6 }}
-                  className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 border border-gray-200 dark:border-gray-700 relative overflow-hidden"
+                  className="relative w-72 lg:w-80 h-[380px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 lg:p-8 border border-gray-100 dark:border-gray-700 overflow-visible"
+                  animate={{
+                    y: [-5, 5, -5],
+                  }}
+                  transition={{ duration: 4, repeat: Infinity, repeatType: "reverse" }}
                 >
-                  {/* Gradient Overlay */}
-                  <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-brand-primary/5 to-transparent dark:from-brand-primary/10"></div>
-                  
                   {/* Document Header */}
-                  <div className="flex items-center justify-between mb-4 relative z-10">
+                  <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-2">
-                      <div className="w-9 h-9 bg-gradient-to-br from-brand-primary to-brand-accent rounded-lg flex items-center justify-center shadow-md">
-                        <FileSignature className="w-4 h-4 text-white" />
+                      <div className="w-8 h-8 bg-brand-primary rounded-full flex items-center justify-center">
+                        <FileText className="w-4 h-4 text-white" />
                       </div>
                       <div>
-                        <div className="h-2.5 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-1.5"></div>
-                        <div className="h-1.5 bg-gray-100 dark:bg-gray-700/50 rounded w-16"></div>
+                        <div className="h-2 w-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                        <div className="h-1.5 w-16 bg-gray-100 dark:bg-gray-700 rounded mt-1"></div>
                       </div>
                     </div>
-                    {/* AI Badge */}
-                    <motion.div
-                      animate={{ opacity: [0.6, 1, 0.6] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      className="flex items-center gap-1 bg-gradient-to-r from-brand-primary/10 to-brand-accent/10 dark:from-brand-primary/20 dark:to-brand-accent/20 px-2.5 py-1 rounded-full border border-brand-primary/20"
-                    >
-                      <Sparkles className="w-3 h-3 text-brand-primary" />
-                      <span className="text-[10px] font-semibold text-brand-primary">AI</span>
-                    </motion.div>
+                    <Building2 className="w-5 h-5 text-brand-primary" />
                   </div>
                   
-                  {/* Document Lines with AI Analysis Effect */}
-                  <div className="space-y-2 mb-5 relative z-10">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: "100%" }}
-                      transition={{ delay: 0.5, duration: 0.8 }}
-                      className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded"
-                    ></motion.div>
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: "92%" }}
-                      transition={{ delay: 0.7, duration: 0.8 }}
-                      className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded relative overflow-hidden"
-                    >
-                      <motion.div
-                        animate={{ x: [-100, 400] }}
-                        transition={{ delay: 1.5, duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                        className="absolute inset-0 w-20 bg-gradient-to-r from-transparent via-brand-primary/30 to-transparent"
-                      />
-                    </motion.div>
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: "83%" }}
-                      transition={{ delay: 0.9, duration: 0.8 }}
-                      className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded"
-                    ></motion.div>
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: "88%" }}
-                      transition={{ delay: 1.1, duration: 0.8 }}
-                      className="h-1.5 bg-gray-100 dark:bg-gray-700/50 rounded"
-                    ></motion.div>
-                  </div>
-                  
-                  {/* Signature Section */}
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-gray-900/50 dark:to-gray-800/30 rounded-xl p-4 mb-4 relative z-10 border border-gray-200/50 dark:border-gray-700/50">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">Signature Required</span>
-                      <motion.div
-                        animate={{ opacity: [0.5, 1, 0.5] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="flex items-center gap-1"
-                      >
-                        <div className="w-1.5 h-1.5 bg-brand-primary rounded-full animate-pulse"></div>
-                        <span className="text-[10px] font-semibold text-brand-primary">Signing...</span>
-                      </motion.div>
-                    </div>
-                    {/* Signature Animation - Only Curved Lines */}
-                    <motion.div className="relative h-14 flex items-center justify-center">
-                      <svg className="w-full h-full" viewBox="0 0 300 60" preserveAspectRatio="xMidYMid meet">
-                        <motion.path
-                          d="M20,30 Q35,15 50,30 Q65,45 80,30 Q95,15 110,30 Q125,42 145,30 Q165,18 185,30 Q205,42 225,30 Q245,18 265,35 Q275,42 280,38"
-                          stroke="currentColor"
-                          strokeWidth="2.5"
-                          fill="none"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="text-brand-primary drop-shadow-sm"
-                          initial={{ pathLength: 0, opacity: 0 }}
-                          animate={{ pathLength: 1, opacity: 1 }}
-                          transition={{ delay: 1.5, duration: 2.5, ease: "easeInOut", repeat: Infinity, repeatDelay: 2 }}
-                        />
-                      </svg>
-                    </motion.div>
+                  {/* Document Lines */}
+                  <div className="space-y-3 mb-8">
+                    <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded w-full"></div>
+                    <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded w-5/6"></div>
+                    <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded w-full"></div>
+                    <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded w-4/6"></div>
+                    <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded w-full"></div>
+                    <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded w-3/6"></div>
                   </div>
 
-                  {/* Collaboration Bar */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 2, duration: 0.6 }}
-                    className="flex items-center justify-between bg-gradient-to-r from-brand-primary/5 to-brand-accent/5 dark:from-brand-primary/10 dark:to-brand-accent/10 rounded-xl p-3 relative z-10"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Users className="w-3.5 h-3.5 text-brand-primary" />
-                      <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400">Collaborators</span>
+                  {/* Signature Area */}
+                  <div className="absolute bottom-6 lg:bottom-8 left-6 lg:left-8 right-6 lg:right-8">
+                    <div className="border-t-2 border-dashed border-gray-200 dark:border-gray-700 pt-4">
+                      <motion.div
+                        initial={{ pathLength: 0, opacity: 0 }}
+                        animate={{ pathLength: 1, opacity: 1 }}
+                        transition={{ duration: 2, delay: 1, repeat: Infinity, repeatDelay: 3 }}
+                        className="mb-2"
+                      >
+                        <svg width="120" height="40" viewBox="0 0 120 40" className="text-brand-primary">
+                          <motion.path
+                            d="M 5 25 Q 15 15, 25 20 T 45 25 Q 55 30, 65 25 T 85 20 Q 95 15, 105 20"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            fill="none"
+                            strokeLinecap="round"
+                            initial={{ pathLength: 0 }}
+                            animate={{ pathLength: 1 }}
+                            transition={{ duration: 2, delay: 1, repeat: Infinity, repeatDelay: 3 }}
+                          />
+                        </svg>
+                      </motion.div>
+                      <div className="flex items-center justify-between text-xs text-gray-400 dark:text-gray-500">
+                        <span>Signature</span>
+                        <Check className="w-4 h-4 text-green-500" />
+                      </div>
                     </div>
-                    <div className="flex -space-x-2">
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ delay: 2.2, type: "spring" }}
-                        className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-primary to-brand-accent border-2 border-white dark:border-gray-800 flex items-center justify-center shadow-md"
-                      >
-                        <span className="text-[9px] font-bold text-white">JD</span>
-                      </motion.div>
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ delay: 2.4, type: "spring" }}
-                        className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-accent to-teal-500 border-2 border-white dark:border-gray-800 flex items-center justify-center shadow-md"
-                      >
-                        <span className="text-[9px] font-bold text-white">SM</span>
-                      </motion.div>
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ delay: 2.6, type: "spring" }}
-                        className="w-7 h-7 rounded-full bg-gradient-to-br from-teal-500 to-brand-primary border-2 border-white dark:border-gray-800 flex items-center justify-center shadow-md"
-                      >
-                        <span className="text-[9px] font-bold text-white">AK</span>
-                      </motion.div>
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ delay: 2.8, type: "spring" }}
-                        className="w-7 h-7 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 border-2 border-white dark:border-gray-800 flex items-center justify-center shadow-md"
-                      >
-                        <span className="text-[8px] font-bold text-white">+5</span>
-                      </motion.div>
-                    </div>
-                  </motion.div>
+                  </div>
 
-                  {/* Success Badge */}
-                  <motion.div
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 3.5, duration: 0.5, type: "spring", stiffness: 200 }}
-                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-brand-primary/10 to-brand-accent/10 dark:from-brand-primary/20 dark:to-brand-accent/20 rounded-xl py-2.5 px-4 mt-4 relative z-10 border border-brand-primary/30 dark:border-brand-primary/40"
-                  >
-                    <CheckCircle2 className="w-4 h-4 text-brand-primary" />
-                    <span className="text-xs font-semibold text-brand-primary">Ready to Share</span>
-                  </motion.div>
+                                {/* Feature Indicators - Positioned relative to document card */}
+                {/* Secure Badge - Top Center of Document */}
+                <motion.div
+                  className="absolute -top-4 left-1/2 -translate-x-1/2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-lg border border-brand-primary/20 dark:border-brand-primary/30 z-50"
+                  animate={{
+                    scale: [1, 1.05, 1],
+                  }}
+                  transition={{ duration: 3, repeat: Infinity, repeatType: "reverse" }}
+                >
+                  <CircleCheckBig className="w-4 h-4 text-brand-primary" />
+                  <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Signed</span>
                 </motion.div>
 
-                {/* Floating Feature Badges - Outside Container */}
-                {/* <motion.div
-                  initial={{ opacity: 0, x: -30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 1, duration: 0.6 }}
-                  className="absolute -left-32 top-1/3 z-50"
-                >
-                  <motion.div
-                    animate={{ 
-                      y: [-5, 5, -5],
-                      rotate: [-2, 2, -2]
-                    }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl px-3 py-2.5 border border-gray-200 dark:border-gray-700"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 bg-gradient-to-br from-brand-primary to-brand-accent rounded-lg flex items-center justify-center">
-                        <Shield className="w-3.5 h-3.5 text-white" />
-                      </div>
-                      <div>
-                        <div className="text-[10px] font-semibold text-gray-900 dark:text-gray-100">Secure</div>
-                        <div className="text-[8px] text-gray-500 dark:text-gray-400">256-bit encrypted</div>
-                      </div>
-                    </div>
-                  </motion.div>
-                </motion.div> */}
-
-                {/* <motion.div
-                  initial={{ opacity: 0, x: 30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 1.2, duration: 0.6 }}
-                  className="absolute -right-32 bottom-1/3 z-50"
-                >
-                  <motion.div
-                    animate={{ 
-                      y: [5, -5, 5],
-                      rotate: [2, -2, 2]
-                    }}
-                    transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-                    className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl px-3 py-2.5 border border-gray-200 dark:border-gray-700"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 bg-gradient-to-br from-brand-accent to-teal-500 rounded-lg flex items-center justify-center">
-                        <Zap className="w-3.5 h-3.5 text-white" />
-                      </div>
-                      <div>
-                        <div className="text-[10px] font-semibold text-gray-900 dark:text-gray-100">Lightning Fast</div>
-                        <div className="text-[8px] text-gray-500 dark:text-gray-400">Sign in 2 seconds</div>
-                      </div>
-                    </div>
-                  </motion.div>
-                </motion.div> */}
+                {/* Document Header */}
+                </motion.div>
               </div>
             </motion.div>
 
@@ -444,7 +318,7 @@ const LoginPage: React.FC = () => {
               className="text-center"
             >
               <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-gray-100 leading-tight">
-                AI-Powered
+                AI Integrated
                 <br />
                 <span className="bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent">
                   Document Signing
@@ -613,9 +487,9 @@ const LoginPage: React.FC = () => {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-                    className="inline-flex items-center justify-center w-16 h-16 bg-green-500 rounded-full mb-6 shadow-lg"
+                    className="inline-flex items-center justify-center w-16 h-16 bg-brand-primary rounded-full mb-6 shadow-lg"
                   >
-                    <CheckCircle2 className="h-8 w-8 text-white" />
+                    <Check className="h-8 w-8 text-white" />
                   </motion.div>
 
                   <h2 className="text-3xl font-bold mb-2 text-gray-900 dark:text-gray-100">
@@ -632,19 +506,19 @@ const LoginPage: React.FC = () => {
                 <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-6 mb-6">
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
-                      <Sparkles className="h-5 w-5 text-brand-accent flex-shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-5 w-5 text-brand-primary flex-shrink-0 mt-0.5" />
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         Click the link to sign in instantly
                       </p>
                     </div>
                     <div className="flex items-start gap-3">
-                      <Sparkles className="h-5 w-5 text-brand-accent flex-shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-5 w-5 text-brand-primary flex-shrink-0 mt-0.5" />
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         Link expires in 15 minutes
                       </p>
                     </div>
                     <div className="flex items-start gap-3">
-                      <Sparkles className="h-5 w-5 text-brand-accent flex-shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-5 w-5 text-brand-primary flex-shrink-0 mt-0.5" />
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         Check spam if needed
                       </p>
@@ -660,6 +534,30 @@ const LoginPage: React.FC = () => {
                   >
                     Resend email
                   </button>
+                  
+                  {/* Temporary Demo Button */}
+                  <button
+                    onClick={async () => {
+                      try {
+                        setIsLoading(true);
+                        const result = await dispatch(loginUser({ 
+                          email: 'demo@example.com', 
+                          password: 'demo123' 
+                        })).unwrap();
+                        // Navigate only after successful login
+                        navigate('/app/dashboard');
+                      } catch (error) {
+                        console.error('Demo login failed:', error);
+                      } finally {
+                        setIsLoading(false);
+                      }
+                    }}
+                    disabled={isLoading}
+                    className="w-full py-3 px-4 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-all hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? 'Logging in...' : 'Demo Access (Temporary)'}
+                  </button>
+                  
                   <button
                     onClick={handleBackToLogin}
                     className="w-full py-3 px-4 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 font-medium transition-colors"

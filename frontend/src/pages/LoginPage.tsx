@@ -113,22 +113,22 @@ const LoginPage: React.FC = () => {
             {/* Theme Switcher */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                <button className="p-2 rounded-lg hover:bg-gray-100 hover:text-primary dark:hover:bg-gray-800 transition-colors">
                   {theme === "light" && <Sun className="h-5 w-5 text-gray-700 dark:text-gray-300" />}
                   {theme === "dark" && <Moon className="h-5 w-5 text-gray-700 dark:text-gray-300" />}
                   {theme === "system" && <Monitor className="h-5 w-5 text-gray-700 dark:text-gray-300" />}
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align={isRTL ? "start" : "end"}>
-                <DropdownMenuItem onClick={() => setTheme("light")}>
+                <DropdownMenuItem onClick={() => setTheme("light")} className="hover:text-primary">
                   <Sun className="mr-2 h-4 w-4" />
                   <span>Light</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("dark")}>
+                <DropdownMenuItem onClick={() => setTheme("dark")} className="hover:text-primary">
                   <Moon className="mr-2 h-4 w-4" />
                   <span>Dark</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("system")}>
+                <DropdownMenuItem onClick={() => setTheme("system")} className="hover:text-primary">
                   <Monitor className="mr-2 h-4 w-4" />
                   <span>System</span>
                 </DropdownMenuItem>
@@ -141,7 +141,7 @@ const LoginPage: React.FC = () => {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="h-9 px-3 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className="h-9 px-3 hover:bg-gray-100 hover:text-primary dark:hover:bg-gray-800"
                 >
                   <img 
                     src={currentLang?.flagUrl} 
@@ -166,7 +166,7 @@ const LoginPage: React.FC = () => {
                     key={lang.code}
                     onClick={() => changeLanguage(lang.code)}
                     className={cn(
-                      "cursor-pointer flex items-center gap-2",
+                      "cursor-pointer flex items-center gap-2 hover:text-primary",
                       currentLanguage === lang.code && "bg-accent"
                     )}
                   >

@@ -176,10 +176,10 @@ const LandingPage = () => {
             isRTL ? "space-x-reverse space-x-4" : "space-x-4"
           )}>
             <button onClick={() => scrollToSection('features')} className="text-sm text-gray-700 dark:text-gray-300 hover:text-brand-primary dark:hover:text-brand-accent transition-colors font-medium">{t('landing.nav.features')}</button>
-            <button onClick={() => scrollToSection('how-it-works')} className="text-sm text-gray-700 dark:text-gray-300 hover:text-brand-primary dark:hover:text-brand-accent transition-colors font-medium">How It Works</button>
+            <button onClick={() => scrollToSection('how-it-works')} className="text-sm text-gray-700 dark:text-gray-300 hover:text-brand-primary dark:hover:text-brand-accent transition-colors font-medium">{t('landing.nav.howItWorks')}</button>
             <button onClick={() => scrollToSection('testimonials')} className="text-sm text-gray-700 dark:text-gray-300 hover:text-brand-primary dark:hover:text-brand-accent transition-colors font-medium">{t('landing.nav.testimonials')}</button>
             <button onClick={() => scrollToSection('pricing')} className="text-sm text-gray-700 dark:text-gray-300 hover:text-brand-primary dark:hover:text-brand-accent transition-colors font-medium">{t('landing.nav.pricing')}</button>
-            <button onClick={() => scrollToSection('contact')} className="text-sm text-gray-700 dark:text-gray-300 hover:text-brand-primary dark:hover:text-brand-accent transition-colors font-medium">Contact</button>
+            <button onClick={() => scrollToSection('contact')} className="text-sm text-gray-700 dark:text-gray-300 hover:text-brand-primary dark:hover:text-brand-accent transition-colors font-medium">{t('landing.nav.contact')}</button>
           </div>
           <div className={cn(
             "flex items-center",
@@ -191,33 +191,33 @@ const LandingPage = () => {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="h-9 w-9 p-0 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
+                  className="h-9 w-9 p-0 hover:bg-gray-100 hover:text-primary dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
                 >
                   {actualTheme === "dark" ? (
                     <Moon className="h-4 w-4" />
                   ) : (
                     <Sun className="h-4 w-4" />
                   )}
-                  <span className="sr-only">Toggle theme</span>
+                  <span className="sr-only">{t('theme.toggleTheme')}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                 <DropdownMenuItem
                   onClick={() => setTheme("light")}
-                  className="flex items-center space-x-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 cursor-pointer"
+                  className="flex items-center space-x-2 hover:bg-gray-100 hover:text-primary dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 cursor-pointer"
                 >
                   <Sun className="h-4 w-4" />
-                  <span>Light</span>
+                  <span>{t('theme.light')}</span>
                   {theme === "light" && (
                     <span className="ml-auto text-brand-primary">✓</span>
                   )}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setTheme("dark")}
-                  className="flex items-center space-x-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 cursor-pointer"
+                  className="flex items-center space-x-2 hover:bg-gray-100 hover:text-primary dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 cursor-pointer"
                 >
                   <Moon className="h-4 w-4" />
-                  <span>Dark</span>
+                  <span>{t('theme.dark')}</span>
                   {theme === "dark" && (
                     <span className="ml-auto text-brand-primary">✓</span>
                   )}
@@ -225,10 +225,10 @@ const LandingPage = () => {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => setTheme("system")}
-                  className="flex items-center space-x-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 cursor-pointer"
+                  className="flex items-center space-x-2 hover:bg-gray-100 hover:text-primary dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 cursor-pointer"
                 >
                   <Monitor className="h-4 w-4" />
-                  <span>System</span>
+                  <span>{t('theme.system')}</span>
                   {theme === "system" && (
                     <span className="ml-auto text-brand-primary">✓</span>
                   )}
@@ -242,7 +242,7 @@ const LandingPage = () => {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="h-9 px-3 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
+                  className="h-9 px-3 hover:bg-gray-100 hover:text-primary dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
                 >
                   <img 
                     src={currentLang?.flagUrl} 
@@ -260,7 +260,7 @@ const LandingPage = () => {
                   <DropdownMenuItem
                     key={lang.code}
                     onClick={() => changeLanguage(lang.code)}
-                    className="flex items-center space-x-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 cursor-pointer"
+                    className="flex items-center space-x-2 hover:bg-gray-100 hover:text-primary dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 cursor-pointer"
                   >
                     <img 
                       src={lang.flagUrl} 
@@ -381,7 +381,7 @@ const LandingPage = () => {
                   transition={{ duration: 3, repeat: Infinity, repeatType: "reverse" }}
                 >
                   <Sparkles className="w-4 h-4" />
-                  <span className="text-xs font-bold">AI Powered</span>
+                  <span className="text-xs font-bold">{t('landing.badges.aiPowered')}</span>
                 </motion.div>
 
                 {/* Floating Feature Badges */}
@@ -395,7 +395,7 @@ const LandingPage = () => {
                   transition={{ duration: 4, repeat: Infinity, repeatType: "reverse", delay: 0.3 }}
                 >
                   <Shield className="w-4 h-4 text-brand-primary" />
-                  <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Secure</span>
+                  <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{t('landing.badges.secure')}</span>
                 </motion.div>
 
                 {/* Instant Badge - Bottom Right */}
@@ -408,7 +408,7 @@ const LandingPage = () => {
                   transition={{ duration: 3.5, repeat: Infinity, repeatType: "reverse", delay: 0.8 }}
                 >
                   <Zap className="w-4 h-4 text-brand-primary" />
-                  <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Instant</span>
+                  <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{t('landing.badges.instant')}</span>
                 </motion.div>
 
                 {/* Document Header */}
@@ -461,14 +461,14 @@ const LandingPage = () => {
                 {/* Signature Section */}
                 <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-gray-900/50 dark:to-gray-800/30 rounded-xl p-4 mb-4 relative z-10 border border-gray-200/50 dark:border-gray-700/50">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">Signature Required</span>
+                    <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">{t('landing.visualElements.signatureRequired')}</span>
                     <motion.div
                       animate={{ opacity: [0.5, 1, 0.5] }}
                       transition={{ duration: 2, repeat: Infinity }}
                       className="flex items-center gap-1"
                     >
                       <div className="w-1.5 h-1.5 bg-brand-primary rounded-full animate-pulse"></div>
-                      <span className="text-[10px] font-semibold text-brand-primary">Signing...</span>
+                      <span className="text-[10px] font-semibold text-brand-primary">{t('landing.visualElements.signing')}</span>
                     </motion.div>
                   </div>
                   {/* Signature Animation - Only Curved Lines */}
@@ -499,7 +499,7 @@ const LandingPage = () => {
                 >
                   <div className="flex items-center gap-2">
                     <Users className="w-3.5 h-3.5 text-brand-primary" />
-                    <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400">Collaborators</span>
+                    <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400">{t('landing.visualElements.collaborators')}</span>
                   </div>
                   <div className="flex -space-x-2">
                     <motion.div
@@ -545,7 +545,7 @@ const LandingPage = () => {
                   className="flex items-center justify-center gap-2 bg-gradient-to-r from-brand-primary/10 to-brand-accent/10 dark:from-brand-primary/20 dark:to-brand-accent/20 rounded-xl py-2.5 px-4 mt-4 relative z-10 border border-brand-primary/30 dark:border-brand-primary/40"
                 >
                   <CheckCircle2 className="w-4 h-4 text-brand-primary" />
-                  <span className="text-xs font-semibold text-brand-primary">Ready to Share</span>
+                  <span className="text-xs font-semibold text-brand-primary">{t('landing.visualElements.readyToShare')}</span>
                 </motion.div>
               </motion.div>
             </div>
@@ -1892,7 +1892,7 @@ const LandingPage = () => {
                 <div className="mb-6">
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('landing.pricing.basic.name')}</h3>
                   <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-5xl font-bold text-brand-primary">Free</span>
+                    <span className="text-5xl font-bold text-brand-primary">{t('landing.pricing.basic.price')}</span>
                   </div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Perfect to get started</p>
                 </div>
@@ -1900,27 +1900,15 @@ const LandingPage = () => {
                 <ul className="space-y-3 mb-8 flex-grow">
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
-                    <span className="text-gray-600 dark:text-gray-300 text-sm">3 documents per month</span>
+                    <span className="text-gray-600 dark:text-gray-300 text-sm">{t('landing.pricing.basic.feature1')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
-                    <span className="text-gray-600 dark:text-gray-300 text-sm">1 signer per document</span>
+                    <span className="text-gray-600 dark:text-gray-300 text-sm">{t('landing.pricing.basic.feature2')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
-                    <span className="text-gray-600 dark:text-gray-300 text-sm">Basic e-signature</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
-                    <span className="text-gray-600 dark:text-gray-300 text-sm">PDF viewer & editor</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
-                    <span className="text-gray-600 dark:text-gray-300 text-sm">Email notifications</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
-                    <span className="text-gray-600 dark:text-gray-300 text-sm">Basic support</span>
+                    <span className="text-gray-600 dark:text-gray-300 text-sm">{t('landing.pricing.basic.feature3')}</span>
                   </li>
                 </ul>
 
@@ -1940,7 +1928,7 @@ const LandingPage = () => {
                       : "border-2 border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white"
                   )}
                 >
-                  {selectedPlan === 'basic' ? 'Get Started' : 'Choose'}
+                  {selectedPlan === 'basic' ? t('landing.pricing.getStarted') : t('landing.pricing.choose')}
                 </button>
               </div>
             </motion.div>
@@ -1966,67 +1954,63 @@ const LandingPage = () => {
                 {/* Popular Badge */}
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
                   <span className="bg-gradient-to-r from-brand-primary to-brand-accent text-white px-4 py-1 rounded-full text-sm font-semibold shadow-lg">
-                    MOST POPULAR
+                    {t('landing.pricing.mostPopular')}
                   </span>
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 h-full flex flex-col relative">
                   
-                  <div className="mb-6">
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Standard</h3>
-                    <div className="flex items-baseline gap-2 mb-1">
-                      {isAnnual ? (
-                        <>
-                          <span className="text-5xl font-bold bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent">
-                            $8
-                          </span>
-                          <span className="text-gray-500 dark:text-gray-400 text-lg">/month</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-5xl font-bold bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent">
-                            $10
-                          </span>
-                          <span className="text-gray-500 dark:text-gray-400 text-lg">/month</span>
-                        </>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {isAnnual ? 'Billed annually ($96/year)' : 'Billed monthly'}
-                    </p>
+                <div className="mb-6">
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('landing.pricing.standard.name')}</h3>
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <span className="text-5xl font-bold bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent">
+                      {isAnnual 
+                        ? (() => {
+                            const match = t('landing.pricing.standard.price').match(/[\d.]+/);
+                            const price = match ? parseFloat(match[0]) * 0.8 : 7.99;
+                            return price.toFixed(2) + '€';
+                          })()
+                        : t('landing.pricing.standard.price').split('/')[0]
+                      }
+                    </span>
+                    <span className="text-gray-500 dark:text-gray-400 text-lg">
+                      {isAnnual ? t('landing.pricing.perMonth') : '/' + t('landing.pricing.standard.price').split('/')[1]}
+                    </span>
                   </div>
-                  
-                  <ul className="space-y-3 mb-8 flex-grow">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {isAnnual ? t('landing.pricing.billedAnnually') : t('landing.pricing.billedMonthly')}
+                  </p>
+                </div>                  <ul className="space-y-3 mb-8 flex-grow">
                     <li className="flex items-start gap-3">
                       <Check className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
-                      <span className="text-gray-600 dark:text-gray-300 text-sm font-medium">Everything in Basic, plus:</span>
+                      <span className="text-gray-600 dark:text-gray-300 text-sm font-medium">{t('landing.pricing.standard.everythingInBasic')}</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <Check className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
-                      <span className="text-gray-600 dark:text-gray-300 text-sm">Unlimited documents</span>
+                      <span className="text-gray-600 dark:text-gray-300 text-sm">{t('landing.pricing.standard.feature1')}</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <Check className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
-                      <span className="text-gray-600 dark:text-gray-300 text-sm">Up to 5 signers per document</span>
+                      <span className="text-gray-600 dark:text-gray-300 text-sm">{t('landing.pricing.standard.feature2')}</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <Check className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
-                      <span className="text-gray-600 dark:text-gray-300 text-sm">Document templates</span>
+                      <span className="text-gray-600 dark:text-gray-300 text-sm">{t('landing.pricing.standard.feature4')}</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <Check className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
-                      <span className="text-gray-600 dark:text-gray-300 text-sm">AI document chat</span>
+                      <span className="text-gray-600 dark:text-gray-300 text-sm">{t('landing.pricing.standard.feature5')}</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <Check className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
-                      <span className="text-gray-600 dark:text-gray-300 text-sm">Document archive</span>
+                      <span className="text-gray-600 dark:text-gray-300 text-sm">{t('landing.pricing.standard.feature6')}</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <Check className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
-                      <span className="text-gray-600 dark:text-gray-300 text-sm">Priority support</span>
+                      <span className="text-gray-600 dark:text-gray-300 text-sm">{t('landing.pricing.standard.feature3')}</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <Check className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
-                      <span className="text-gray-600 dark:text-gray-300 text-sm">Audit trail & tracking</span>
+                      <span className="text-gray-600 dark:text-gray-300 text-sm">{t('landing.pricing.standard.feature7')}</span>
                     </li>
                   </ul>
 
@@ -2046,7 +2030,7 @@ const LandingPage = () => {
                         : "border-2 border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white"
                     )}
                   >
-                    {selectedPlan === 'standard' ? 'Get Started' : 'Choose'}
+                    {selectedPlan === 'standard' ? t('landing.pricing.getStarted') : t('landing.pricing.choose')}
                   </button>
                 </div>
               </div>
@@ -2072,61 +2056,59 @@ const LandingPage = () => {
               )}>
                 
                 <div className="mb-6">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Professional</h3>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('landing.pricing.professional.name')}</h3>
                   <div className="flex items-baseline gap-2 mb-1">
-                    {isAnnual ? (
-                      <>
-                        <span className="text-5xl font-bold text-brand-accent">$16</span>
-                        <span className="text-gray-500 dark:text-gray-400 text-lg">/month</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-5xl font-bold text-brand-accent">$20</span>
-                        <span className="text-gray-500 dark:text-gray-400 text-lg">/month</span>
-                      </>
-                    )}
+                    <span className="text-5xl font-bold text-brand-accent">
+                      {isAnnual 
+                        ? (() => {
+                            const match = t('landing.pricing.professional.price').match(/[\d.]+/);
+                            const price = match ? parseFloat(match[0]) * 0.8 : 15.99;
+                            return price.toFixed(2) + '€';
+                          })()
+                        : t('landing.pricing.professional.price').split('/')[0]
+                      }
+                    </span>
+                    <span className="text-gray-500 dark:text-gray-400 text-lg">
+                      {isAnnual ? t('landing.pricing.perMonth') : '/' + t('landing.pricing.professional.price').split('/')[1]}
+                    </span>
                   </div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {isAnnual ? 'Billed annually ($192/year)' : 'Billed monthly'}
+                    {isAnnual ? t('landing.pricing.billedAnnually') : t('landing.pricing.billedMonthly')}
                   </p>
                 </div>
                 
                 <ul className="space-y-3 mb-8 flex-grow">
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-brand-accent shrink-0 mt-0.5" />
-                    <span className="text-gray-600 dark:text-gray-300 text-sm font-medium">Everything in Standard, plus:</span>
+                    <span className="text-gray-600 dark:text-gray-300 text-sm font-medium">{t('landing.pricing.professional.everythingInStandard')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-brand-accent shrink-0 mt-0.5" />
-                    <span className="text-gray-600 dark:text-gray-300 text-sm">Unlimited signers</span>
+                    <span className="text-gray-600 dark:text-gray-300 text-sm">{t('landing.pricing.professional.feature2')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-brand-accent shrink-0 mt-0.5" />
-                    <span className="text-gray-600 dark:text-gray-300 text-sm">Advanced AI analysis</span>
+                    <span className="text-gray-600 dark:text-gray-300 text-sm">{t('landing.pricing.professional.feature4')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-brand-accent shrink-0 mt-0.5" />
-                    <span className="text-gray-600 dark:text-gray-300 text-sm">Custom workflows</span>
+                    <span className="text-gray-600 dark:text-gray-300 text-sm">{t('landing.pricing.professional.feature6')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-brand-accent shrink-0 mt-0.5" />
-                    <span className="text-gray-600 dark:text-gray-300 text-sm">Team collaboration</span>
+                    <span className="text-gray-600 dark:text-gray-300 text-sm">{t('landing.pricing.professional.feature5')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-brand-accent shrink-0 mt-0.5" />
-                    <span className="text-gray-600 dark:text-gray-300 text-sm">Advanced analytics</span>
+                    <span className="text-gray-600 dark:text-gray-300 text-sm">{t('landing.pricing.professional.feature7')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-brand-accent shrink-0 mt-0.5" />
-                    <span className="text-gray-600 dark:text-gray-300 text-sm">Address book</span>
+                    <span className="text-gray-600 dark:text-gray-300 text-sm">{t('landing.pricing.professional.feature3')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-brand-accent shrink-0 mt-0.5" />
-                    <span className="text-gray-600 dark:text-gray-300 text-sm">Priority 24/7 support</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-brand-accent shrink-0 mt-0.5" />
-                    <span className="text-gray-600 dark:text-gray-300 text-sm">API access</span>
+                    <span className="text-gray-600 dark:text-gray-300 text-sm">{t('landing.pricing.professional.feature8')}</span>
                   </li>
                 </ul>
 
@@ -2146,7 +2128,7 @@ const LandingPage = () => {
                       : "border-2 border-brand-accent text-brand-accent hover:bg-brand-accent hover:text-white"
                   )}
                 >
-                  {selectedPlan === 'professional' ? 'Get Started' : 'Choose'}
+                  {selectedPlan === 'professional' ? t('landing.pricing.getStarted') : t('landing.pricing.choose')}
                 </button>
               </div>
             </motion.div>

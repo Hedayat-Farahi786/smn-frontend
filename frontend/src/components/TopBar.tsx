@@ -106,7 +106,7 @@ const TopBar: React.FC = () => {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-9 w-9 p-0 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-primary dark:text-blue-400 hover:text-primary dark:hover:text-blue-300"
+                className="h-9 w-9 p-0 hover:bg-teal-100 dark:hover:bg-teal-900/50 text-primary dark:text-teal-400 hover:text-primary dark:hover:text-teal-300"
               >
                 {actualTheme === "dark" ? (
                   <Moon className="h-4 w-4" />
@@ -116,12 +116,12 @@ const TopBar: React.FC = () => {
                 <span className="sr-only">Toggle theme</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40 border-blue-100">
+            <DropdownMenuContent align="end" className="w-40 border-teal-100">
               <DropdownMenuItem
                 onClick={() => setTheme("light")}
-                className="flex items-center space-x-2 hover:bg-blue-50"
+                className="flex items-center space-x-2 hover:bg-teal-50"
               >
-                <Sun className="h-4 w-4 text-blue-600" />
+                <Sun className="h-4 w-4 text-teal-600" />
                 <span>Light</span>
                 {theme === "light" && (
                   <span className="ml-auto text-primary">✓</span>
@@ -129,9 +129,9 @@ const TopBar: React.FC = () => {
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => setTheme("dark")}
-                className="flex items-center space-x-2 hover:bg-blue-50"
+                className="flex items-center space-x-2 hover:bg-teal-50"
               >
-                <Moon className="h-4 w-4 text-blue-600" />
+                <Moon className="h-4 w-4 text-teal-600" />
                 <span>Dark</span>
                 {theme === "dark" && (
                   <span className="ml-auto text-primary">✓</span>
@@ -140,9 +140,9 @@ const TopBar: React.FC = () => {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => setTheme("system")}
-                className="flex items-center space-x-2 hover:bg-blue-50"
+                className="flex items-center space-x-2 hover:bg-teal-50"
               >
-                <Monitor className="h-4 w-4 text-blue-600" />
+                <Monitor className="h-4 w-4 text-teal-600" />
                 <span>System</span>
                 {theme === "system" && (
                   <span className="ml-auto text-primary">✓</span>
@@ -157,7 +157,7 @@ const TopBar: React.FC = () => {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-9 px-3 hover:bg-accent"
+                className="h-9 px-3 hover:bg-teal-100 hover:text-primary dark:hover:bg-teal-900/50"
               >
                 <img 
                   src={currentLang?.flagUrl} 
@@ -175,7 +175,7 @@ const TopBar: React.FC = () => {
                 <DropdownMenuItem
                   key={lang.code}
                   onClick={() => changeLanguage(lang.code)}
-                  className="flex items-center space-x-2 hover:bg-accent"
+                  className="flex items-center space-x-2 hover:bg-teal-50 hover:text-primary dark:hover:bg-teal-900/50"
                 >
                   <img 
                     src={lang.flagUrl} 
